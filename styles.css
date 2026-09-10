@@ -259,14 +259,13 @@ section{position:relative;padding:120px 0;}
   border-radius:var(--radius-lg);overflow:hidden;position:relative;height:340px;
   display:flex;flex-direction:column;justify-content:flex-end;padding:30px;color:var(--beige);
   transition:transform .5s var(--ease);border:1px solid rgba(241,238,255,.14);
+  background:url('imagenes/cuadro.png') center/cover;
 }
 .sector-card:hover{transform:translateY(-6px) scale(1.015);}
 .sector-card::before{
   content:'';position:absolute;inset:0;z-index:0;
+  background:linear-gradient(165deg,rgba(14,10,40,.5),rgba(6,4,20,.78) 75%);
 }
-.sector-card.clinica::before{background:linear-gradient(165deg,rgba(19,32,34,.62),rgba(5,11,12,.7) 75%);}
-.sector-card.pupuseria::before{background:linear-gradient(165deg,rgba(36,21,18,.62),rgba(13,6,5,.7) 75%);}
-.sector-card.taller::before{background:linear-gradient(165deg,rgba(14,26,18,.62),rgba(4,8,5,.7) 75%);}
 .sector-card .sicon{
   position:relative;z-index:1;width:44px;height:44px;border-radius:50%;
   border:1px solid rgba(241,238,255,.55);display:flex;align-items:center;justify-content:center;margin-bottom:auto;
