@@ -3,23 +3,6 @@
 
   function safe(fn, name){ try{ fn(); }catch(err){ console.warn('[InnovaSistem]', name, err); } }
 
-  function initPetals(){
-    var wrap = document.getElementById('petals');
-    if(!wrap) return;
-    var n = 16;
-    for(var i=0;i<n;i++){
-      var p = document.createElement('div');
-      p.className = 'petal';
-      var size = 6 + Math.random()*8;
-      p.style.width = size+'px';
-      p.style.height = size+'px';
-      p.style.left = (Math.random()*100)+'vw';
-      p.style.animationDuration = (8+Math.random()*10)+'s';
-      p.style.animationDelay = (Math.random()*10)+'s';
-      wrap.appendChild(p);
-    }
-  }
-
   function initTabs(){
     var tabLogin = document.getElementById('tabLogin');
     var tabRegister = document.getElementById('tabRegister');
@@ -102,7 +85,6 @@
     });
   }
 
-  safe(initPetals, 'petals');
   safe(initTabs, 'tabs');
   safe(initTypeSelect, 'typeSelect');
   safe(initForms, 'forms');

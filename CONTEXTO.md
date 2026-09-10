@@ -29,33 +29,61 @@ No hay backend. Todo el "negocio" del usuario vive en `localStorage`:
 1. **Sin emojis** como iconografía "seria" — se reemplazaron todos por SVG de
    línea minimalistas (offer-cards, sector-cards, dock del admin, selector de
    tipo de negocio en login).
-2. **Paleta sin verdes** — el usuario pidió explícitamente sacar el verde por
-   accesibilidad/contraste. Paleta actual (variables CSS `--dark-green`,
-   `--moss`, `--midnight` mantienen esos NOMBRES por legado pero ya no son
-   verdes):
-   - tinta oscura `#1E1712` (antes verde oscuro)
-   - terracota `#A9714F` (antes musgo)
-   - vino `#6B2A45` (antes verde-azulado/midnight)
-   - rosado `#D3968C` (sin cambios, ya combinaba bien)
-   - crema `#F7F4D5` (fondo base, sin cambios)
-   No reintroducir tonos verdes en ningún lado (revisar antes de usar `green`
-   o hex con G dominante).
-3. **Imágenes reales del usuario** (en `imagenes/`, usadas literalmente, NO
-   recreadas en SVG):
-   - `fondo.png` — cerezo + pagoda + lago (ink-wash). Fondo fijo de **toda**
-     la página del landing (`.page-bg` en `styles.css`) y del menú/nav.
-   - `fondos.png` — bonsái. Fondo del panel de admin (`.bg-texture` en
-     `admin.css`), muy sutil.
-   - `login.png` — Monte Fuji + cerezos + lago. Panel derecho del login
-     (`.auth-art-panel`). El usuario dijo explícitamente "dejalo así" — no
-     tocar esta imagen ni su posición.
-   - `koi.png` — koi negro/rojo + sol rojo, ink-wash. Fondo exterior de la
-     página de login (`body` en `login.css`), afuera de la tarjeta.
-   Todas las secciones que tienen la foto de fondo usan overlays con
-   `rgba(...)` de baja opacidad (no colores sólidos) para que la foto se note
-   — el usuario pidió explícitamente "que se vea demasiado más, que parezca
-   que esa foto es el fondo". Si se agregan secciones nuevas, seguir ese
-   mismo patrón (fondo fijo + overlay traslúcido, nunca opaco).
+2. **Rediseño visual "cromático/pastel" (2026-09-09)** — el usuario pidió
+   cambiar todo el aspecto visual: nuevo fondo, nueva paleta, cuadros
+   redondeados, orbes decorativos animados. Reemplaza el look "ink-wash
+   japonés" anterior (cerezos/koi/bonsái) que ya no aplica. Detalles:
+   - **Paleta** — variables CSS `--dark-green`, `--moss`, `--midnight`,
+     `--rosy` mantienen esos NOMBRES por legado (arrastrados de la paleta
+     original) pero ahora son tonos violeta/azul/rosa cromáticos, NO verdes
+     ni cafés/terracota:
+     - `--dark-green` → `#221A3D` (índigo oscuro, antes tinta `#1E1712`)
+     - `--moss` → `#6C5CE7` (violeta-azul vívido, antes terracota `#A9714F`)
+     - `--midnight` → `#4A3F91` (azul-violeta profundo, antes vino `#6B2A45`)
+     - `--rosy` → `#FFB8DD` (rosa pastel, antes rosado cálido `#D3968C`)
+     - `--beige` → `#F1EEFF` (lavanda muy claro, antes crema `#F7F4D5`)
+     - `--ink`/`--paper` también migraron a tonos fríos (`#1C1830` / `#FCFBFF`).
+     Nuevas variables de tarjetas pastel/cromáticas en `styles.css`:
+     `--p-lav`, `--p-sky`, `--p-rose`, `--p-mint`, `--p-butter`, `--p-peach` —
+     se usan para rotar el fondo de step-cards/offer-cards/problem-cards.
+     Seguir sin reintroducir verdes en ningún lado.
+   - **Imágenes** (en `imagenes/`, usadas literalmente, NO recreadas en SVG):
+     - `cromo.png` — tela/satín azul metálico abstracto. Es el **fondo fijo
+       de TODO el sitio** (landing `.page-bg`, login `body`, admin
+       `.bg-texture`) — reemplaza a los antiguos `fondo.png`/`koi.png`/
+       `fondos.png` (ELIMINADOS del proyecto, ya no existen en `imagenes/`).
+     - `orbe.png` — esfera de cristal violeta/dorada. Se usa en dos lugares:
+       (a) como imagen del panel derecho del login (`.auth-art-panel`,
+       reemplaza a `login.png`, también eliminado — el usuario pidió
+       explícitamente este cambio, anulando la instrucción anterior de
+       "dejalo así"); (b) como textura de los **mini-orbes decorativos**
+       (`.mini-orb`, clase `.orb-field`) repartidos y animados
+       (`@keyframes orb-float`) en las tres páginas (index/login/admin).
+     - `ois.png` — dos peces (betta) japoneses con caracteres 五条夏油. Subida
+       por el usuario junto con las otras dos pero **no se usó** en ningún
+       lado (no fue mencionada en las instrucciones de rediseño) — queda en
+       `imagenes/` disponible por si se pide usarla después.
+   - **Overlay del fondo fijo**: gradiente oscuro translúcido
+     (`rgba(10,8,30,…)` / `rgba(6,4,20,…)` en modo oscuro del admin) sobre
+     `cromo.png`, mucho más sutil que la paleta anterior — la imagen debe
+     notarse fuerte, el overlay solo da legibilidad de fondo.
+   - **"Cuadros redondeados" en toda la información ya existente**: se subió
+     `--radius-lg/md/sm` (32/22/14px) y además el `.hero-inner` y
+     `.section-head` (landing) ahora son paneles de vidrio pastel
+     (`background:rgba(252,251,255,.82)` + `backdrop-filter:blur`) en vez de
+     texto flotando directo sobre el fondo — así el texto sigue con tinta
+     oscura legible aunque el fondo de página ahora es oscuro. Mismo patrón
+     glass+blur en kpi-card/panel-box/item-card/modal-box (admin) y
+     auth-form-panel (login). Si se agregan bloques de info nuevos, seguir
+     este patrón (glass pastel + radio grande), no texto plano sobre imagen.
+   - Se eliminaron los pétalos de sakura cayendo (`.petals`/`initPetals` en
+     login) y el SVG de pétalos del panel de login (`.art-petals-svg`) —
+     sustituidos por los mini-orbes, que son el nuevo motivo decorativo del
+     sitio.
+3. **Imágenes anteriores (ELIMINADAS, ya no existen)**: `fondo.png`,
+   `fondos.png`, `login.png`, `koi.png` — si algún commit viejo o memoria
+   previa las menciona, ignorar esa referencia; el fondo del sitio es
+   `cromo.png` en todos lados desde el rediseño del punto 2.
 4. **Flujo de inventario y proveedores (importante, cambia el modelo de
    datos):**
    - Inventario es **solo lectura** — no hay botón de "agregar" ahí.
@@ -78,6 +106,20 @@ No hay backend. Todo el "negocio" del usuario vive en `localStorage`:
      Repuestos, Impressa Repuestos, ROMAN AUTOMOTRIZ, INCAPRO), clientes =
      clientes.
    - Todo esto vive en `data.js` (`PRODUCTS`, `PROVIDERS`, `BUSINESS_TYPES`).
+6. **Panel arranca en cero (2026-09-09)** — `seedState()` en `admin.js` ya no
+   llama a `buildClients`/`buildSales`: un negocio nuevo arranca con
+   `clients:[]`, `sales:[]`, `payments:[]` y el inventario con `stock:0` en
+   todos los productos (antes tenía stock inicial y 20 clientes/ventas de
+   ejemplo). El inventario solo sube al comprarle a un proveedor. Esto
+   aplica solo a cuentas nuevas — `login.js` borra
+   `innova_business_<tipo>` al registrar, así que siempre re-siembra en 0.
+7. **Se eliminó la sección "Mi negocio"** — el botón del dock
+   (`data-view="negocio"`), la `<section id="view-negocio">`, la función
+   `renderNegocio()` y la clase CSS `.locked-type` ya no existen. El nombre
+   del negocio se sigue mostrando en el topbar (`#bizName`) desde
+   `STATE.name`, pero no hay pantalla para editarlo — si el usuario pide
+   poder cambiar nombre/teléfono/dirección después, hay que crear una
+   pantalla nueva (no revivir la vieja).
 
 ## Cómo previsualizar
 

@@ -21,21 +21,16 @@
 
   function seedState(){
     var products = window.INNOVA_DATA.products[TYPE].map(function(p,i){
-      return {id:'inv-'+i, name:p.name, price:p.price, stock:p.stock};
-    });
-    var clients = window.INNOVA_DATA.buildClients(TYPE);
-    var sales = window.INNOVA_DATA.buildSales(TYPE);
-    var payments = sales.map(function(s){
-      return {id:'pay-'+s.id, client:s.client, amount:s.amount, method:s.method, status:s.status, date:s.date};
+      return {id:'inv-'+i, name:p.name, price:p.price, stock:0};
     });
     return {
       name: account.businessName || 'Mi negocio',
       phone:'', address:'',
       inventory: products,
       providersAdded: [],
-      clients: clients,
-      sales: sales,
-      payments: payments
+      clients: [],
+      sales: [],
+      payments: []
     };
   }
 
@@ -195,24 +190,6 @@
   function kpi(lbl, val, deltaClass){
     return '<div class="kpi-card"><div class="lbl">'+lbl+'</div><div class="val">'+val+'</div>'+
       (deltaClass ? '<div class="delta '+deltaClass+'">Revisar pronto</div>' : '<div class="delta">Al día</div>')+'</div>';
-  }
-
-  /* ---------------- MI NEGOCIO ---------------- */
-  function renderNegocio(){
-    var typeInfo = window.INNOVA_DATA.getType(TYPE);
-    document.getElementById('lockedTypeBox').innerHTML =
-      '<span style="font-size:1.4rem;">'+typeInfo.icon+'</span> Tipo de negocio: <strong>'+typeInfo.label+'</strong> · no se puede cambiar después del registro';
-    var form = document.getElementById('bizForm');
-    form.name.value = STATE.name || '';
-    form.phone.value = STATE.phone || '';
-    form.address.value = STATE.address || '';
-    form.onsubmit = function(e){
-      e.preventDefault();
-      STATE.name = form.name.value.trim() || STATE.name;
-      STATE.phone = form.phone.value.trim();
-      STATE.address = form.address.value.trim();
-      saveState(); renderTopbar(); toast('Datos del negocio guardados');
-    };
   }
 
   /* ---------------- INVENTARIO ---------------- */
@@ -545,7 +522,6 @@
     if(!activeView) return;
     var id = activeView.id;
     if(id === 'view-resumen') renderResumen();
-    else if(id === 'view-negocio') renderNegocio();
     else if(id === 'view-inventario') renderInventario();
     else if(id === 'view-ventas') renderVentas();
     else if(id === 'view-proveedores') renderProveedores();
