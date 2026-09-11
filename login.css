@@ -38,10 +38,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;}
   box-shadow:0 20px 50px -14px rgba(0,0,0,.55);
   animation:orb-float 12s ease-in-out infinite;
 }
-.mini-orb.o1{width:58px;height:58px;top:10%;left:8%;animation-duration:13s;}
-.mini-orb.o2{width:34px;height:34px;top:78%;left:14%;animation-duration:9s;animation-delay:1s;}
-.mini-orb.o3{width:44px;height:44px;top:20%;left:90%;animation-duration:11s;animation-delay:.5s;}
-.mini-orb.o4{width:28px;height:28px;top:85%;left:88%;animation-duration:10s;animation-delay:1.6s;}
+.mini-orb.o1{width:28px;height:28px;top:10%;left:8%;animation-duration:13s;}
+.mini-orb.o2{width:16px;height:16px;top:78%;left:14%;animation-duration:9s;animation-delay:1s;}
+.mini-orb.o3{width:22px;height:22px;top:20%;left:90%;animation-duration:11s;animation-delay:.5s;}
+.mini-orb.o4{width:14px;height:14px;top:85%;left:88%;animation-duration:10s;animation-delay:1.6s;}
 @keyframes orb-float{
   0%,100%{transform:translateY(0) rotate(0deg);}
   50%{transform:translateY(-20px) rotate(10deg);}
@@ -116,6 +116,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;}
 
 .switch-line{font-size:.82rem;text-align:center;color:rgba(28,24,48,.65);margin-top:2px;}
 .switch-line button{color:var(--midnight);font-weight:700;text-decoration:underline;}
+.switch-line.admin-switch{font-size:.74rem;opacity:.7;margin-top:10px;}
+.switch-line.admin-switch button{color:rgba(28,24,48,.65);font-weight:600;}
 
 .auth-art-panel{
   position:relative;overflow:hidden;background:#0A0A14;

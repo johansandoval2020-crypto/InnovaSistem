@@ -10,19 +10,37 @@ preguntas ni deshacer trabajo.
 ## Estructura de archivos
 
 - `index.html` / `styles.css` / `main.js` — landing pública.
-- `login.html` / `login.css` / `login.js` — login + registro (con selector de
-  tipo de negocio).
-- `admin.html` / `admin.css` / `admin.js` — panel de administración (SPA con
-  vistas por `data-view`, todo en localStorage, sin backend real).
-- `data.js` — datos semilla: productos, proveedores y generador de 20
-  clientes/ventas por tipo de negocio.
+- `login.html` / `login.css` / `login.js` — login (negocio + administrador) y
+  registro (con selector de tipo de negocio).
+- `admin.html` / `admin.css` / `admin.js` — panel de administración de UN
+  negocio (SPA con vistas por `data-view`, todo en localStorage, sin backend
+  real).
+- `superadmin.html` / `superadmin.js` — panel de administración GENERAL de la
+  plataforma (ve todos los negocios registrados). Reutiliza `admin.css`
+  directamente (no tiene su propio CSS) — mismo dock, mismas kpi-card/
+  panel-box/item-card/data-table, mismo fondo. Ver punto 8 más abajo.
+- `data.js` — datos semilla: productos, proveedores y tipos de negocio
+  (`PRODUCTS`, `PROVIDERS`, `BUSINESS_TYPES`). Ya no genera clientes/ventas
+  de ejemplo (ver punto 6).
 - `imagenes/` — assets reales que el usuario proveyó (ver abajo).
 
-No hay backend. Todo el "negocio" del usuario vive en `localStorage`:
-- `innova_account` — cuenta creada en el registro (nombre, tipo, email).
-- `innova_business_<tipo>` — el estado completo del negocio (inventario,
-  proveedores agregados, clientes, ventas, pagos).
-- `innova_theme` — tema claro/oscuro del panel.
+No hay backend. Todo vive en `localStorage`:
+- `innova_accounts` — **array** con TODOS los negocios registrados en el
+  navegador: `{id, businessName, ownerName, email, password, type,
+  createdAt}`. Es la "base de datos" de clientes de la plataforma.
+- `innova_account` — snapshot del negocio con la sesión ACTIVA en este
+  momento (uno de los objetos de `innova_accounts`, copiado ahí al hacer
+  login). `admin.js` lo lee para saber quién entró.
+- `innova_business_<id>` — el estado completo de un negocio (inventario,
+  proveedores agregados, clientes, ventas, pagos), donde `<id>` es el
+  `account.id` generado al registrarse (NO el tipo — ver punto 8, antes era
+  por tipo y chocaban negocios del mismo rubro).
+- `innova_orders` — array global de pedidos a proveedores hechos por
+  cualquier negocio (lo lee `superadmin.html`). Ver punto 8.
+- `innova_admin_session` — `'1'` cuando hay una sesión de administrador de
+  plataforma activa (gate de `superadmin.html`).
+- `innova_theme` — tema claro/oscuro (compartido por `admin.html` y
+  `superadmin.html`).
 
 ## Decisiones de diseño ya tomadas (no revertir sin que el usuario lo pida)
 
@@ -49,16 +67,26 @@ No hay backend. Todo el "negocio" del usuario vive en `localStorage`:
      Seguir sin reintroducir verdes en ningún lado.
    - **Imágenes** (en `imagenes/`, usadas literalmente, NO recreadas en SVG):
      - `cromo.png` — tela/satín azul metálico abstracto. Es el **fondo fijo
-       de TODO el sitio** (landing `.page-bg`, login `body`, admin
-       `.bg-texture`) — reemplaza a los antiguos `fondo.png`/`koi.png`/
-       `fondos.png` (ELIMINADOS del proyecto, ya no existen en `imagenes/`).
+       de TODO el sitio**, aplicado directo en `body` (`background-image` +
+       `background-attachment:fixed`) en `styles.css`/`login.css`/`admin.css`
+       — reemplaza a los antiguos `fondo.png`/`koi.png`/`fondos.png`
+       (ELIMINADOS del proyecto, ya no existen en `imagenes/`). NO se usa un
+       div `.page-bg`/`.bg-texture` separado — se probó y en algunos motores
+       de render (headless) un div fijo aparte no pintaba bien al hacer
+       scroll; ponerlo directo en `body` es más confiable. No revertir a un
+       div separado sin probar bien el scroll primero.
+     - `cuadro.png` — textura metálica azul/plata (distinta de `cromo.png`,
+       más plateada). Fondo de las `.sector-card` (Clínica/Pupusería/Taller)
+       en `styles.css`, con un degradado oscuro encima para legibilidad.
      - `orbe.png` — esfera de cristal violeta/dorada. Se usa en dos lugares:
        (a) como imagen del panel derecho del login (`.auth-art-panel`,
        reemplaza a `login.png`, también eliminado — el usuario pidió
        explícitamente este cambio, anulando la instrucción anterior de
        "dejalo así"); (b) como textura de los **mini-orbes decorativos**
        (`.mini-orb`, clase `.orb-field`) repartidos y animados
-       (`@keyframes orb-float`) en las tres páginas (index/login/admin).
+       (`@keyframes orb-float`) en index/login/admin/superadmin. Los tamaños
+       (`.mini-orb.oN{width;height}`) se redujeron el 2026-09-10 a pedido del
+       usuario ("más pequeños") — son sutiles a propósito, no agrandarlos.
      - `ois.png` — dos peces (betta) japoneses con caracteres 五条夏油. Subida
        por el usuario junto con las otras dos pero **no se usó** en ningún
        lado (no fue mencionada en las instrucciones de rediseño) — queda en
@@ -110,9 +138,10 @@ No hay backend. Todo el "negocio" del usuario vive en `localStorage`:
    llama a `buildClients`/`buildSales`: un negocio nuevo arranca con
    `clients:[]`, `sales:[]`, `payments:[]` y el inventario con `stock:0` en
    todos los productos (antes tenía stock inicial y 20 clientes/ventas de
-   ejemplo). El inventario solo sube al comprarle a un proveedor. Esto
-   aplica solo a cuentas nuevas — `login.js` borra
-   `innova_business_<tipo>` al registrar, así que siempre re-siembra en 0.
+   ejemplo). El inventario solo sube al comprarle a un proveedor. Se
+   re-siembra automáticamente en 0 la primera vez que `admin.js` no
+   encuentra `innova_business_<id>` para ese negocio (ver punto 8 para cómo
+   se genera `<id>` ahora).
 7. **Se eliminó la sección "Mi negocio"** — el botón del dock
    (`data-view="negocio"`), la `<section id="view-negocio">`, la función
    `renderNegocio()` y la clase CSS `.locked-type` ya no existen. El nombre
@@ -120,6 +149,69 @@ No hay backend. Todo el "negocio" del usuario vive en `localStorage`:
    `STATE.name`, pero no hay pantalla para editarlo — si el usuario pide
    poder cambiar nombre/teléfono/dirección después, hay que crear una
    pantalla nueva (no revivir la vieja).
+8. **Multi-negocio + panel de super-admin (2026-09-10)** — antes solo podía
+   existir UN negocio por browser por rubro (`innova_account` único,
+   `innova_business_<tipo>` compartido). Ahora hay un modelo de varias
+   cuentas y un segundo rol de administrador de plataforma:
+   - **Registro ya NO inicia sesión.** `panelRegister` en `login.js` guarda
+     la cuenta en el array `innova_accounts` (con un `id` único
+     `uid('biz')`) y devuelve a la pestaña de login con un mensaje — el
+     usuario tiene que iniciar sesión con el correo/contraseña que acaba de
+     crear. No usar `admin.html` como destino directo del registro.
+   - **Login de negocio** (`panelLogin`) busca en `innova_accounts` por
+     email+password, y si matchea guarda ese objeto en `innova_account`
+     (sesión activa) y va a `admin.html`.
+   - **Login de administrador** es un tercer panel (`panelAdminLogin`) al
+     que se llega con el link "¿Sos administrador de la plataforma?" debajo
+     del login normal (no es una pestaña principal, es un sub-estado dentro
+     de "Iniciar sesión"; `initTabs()` en `login.js` maneja el show/hide de
+     los 3 panels: login / register / adminLogin). Solo valida
+     **el correo**, hardcodeado como `admin24@gmail.com`
+     (`ADMIN_EMAIL` en `login.js`) — la contraseña no se verifica contra
+     nada real, es solo de forma. Si matchea, pone
+     `innova_admin_session='1'` y va a `superadmin.html`. Si el usuario
+     pide cambiar ese correo o agregar contraseña real, es un cambio de una
+     línea en `login.js` (`ADMIN_EMAIL`).
+   - **`admin.js` ya no usa `TYPE` como clave de storage** — usa
+     `BIZ_ID = account.id || account.type` (el fallback a `type` es solo
+     para no romper una sesión vieja de antes de este cambio). Todo
+     `loadState()`/`saveState()` usa `'innova_business_' + BIZ_ID`. Esto es
+     lo que permite que dos negocios del mismo rubro (dos "Clínica", por
+     ejemplo) tengan inventario/ventas totalmente independientes.
+   - **Pedidos a proveedores → visibles para el super-admin.** Cuando un
+     negocio confirma una compra en `openProviderCatalog()` (admin.js), ya
+     no solo suma stock: también llama a `pushOrder()`, que agrega un
+     registro a `innova_orders` con negocio, dueño, proveedor, ítems
+     comprados, total, fecha del pedido y una fecha de llegada simulada
+     (`arrivalDate`, hoy + 2 a 6 días al azar). `superadmin.html` calcula el
+     estado como "En camino" o "Entregado" comparando `arrivalDate` con la
+     fecha de hoy — no hay un tercer estado ni back-office real de logística,
+     es solo una simulación de seguimiento.
+   - **`superadmin.html`** — mismo dock visual que `admin.html` (reutiliza
+     `admin.css`), pero con 4 vistas propias, guardadas por
+     `innova_admin_session` (si no está seteado, redirige a `login.html`):
+     - `Resumen`: KPIs agregados de TODOS los negocios (cuántos negocios,
+       ingresos generados sumando `sales` de cada uno, "tu comisión" —
+       un **10% fijo hardcodeado** en `COMMISSION_RATE` en
+       `superadmin.js`, es un valor de ejemplo, no un dato real del
+       negocio — y pedidos en camino) + gráfica agregada + últimos
+       movimientos de cualquier negocio.
+     - `Ingresos`: tabla de negocio → dueño → rubro → ingresos generados,
+       ordenada de mayor a menor.
+     - `Clientes`: en este panel "cliente" = un NEGOCIO registrado en la
+       plataforma (no un cliente final) — tarjetas con nombre del negocio,
+       nombre del dueño, rubro, correo y fecha de registro, leídas de
+       `innova_accounts`.
+     - `Pedidos`: tabla de `innova_orders` con negocio, productos, total,
+       fecha del pedido, días restantes para llegar y estado.
+     - `superadmin.js` duplica un puñado de helpers pequeños de `admin.js`
+       (charts SVG, `money`, tema, nav) porque no hay sistema de módulos —
+       es intencional, no un descuido; si se edita un chart hay que
+       replicar el cambio en ambos archivos.
+   - Como esto es 100% localStorage sin backend, el super-admin **solo ve
+     negocios registrados en el mismo navegador/dispositivo** donde se abre
+     `superadmin.html`. No hay sincronización entre dispositivos — es una
+     limitación conocida de la arquitectura, no un bug.
 
 ## Cómo previsualizar
 
@@ -136,11 +228,12 @@ hay `innova_account` en localStorage.
 ## Pendientes / posibles próximos pasos
 
 Nada pendiente confirmado por el usuario a la fecha de este commit — el
-sistema cubre todo lo pedido (landing, login/registro por rubro, inventario,
-ventas con gráficas, proveedores con catálogo+carrito, clientes/facturación,
-ingresos, pagos, modo claro/oscuro). Si el usuario pide algo nuevo, agregarlo
-respetando los 5 puntos de arriba antes de proponer cambios visuales o de
-flujo por cuenta propia.
+sistema cubre todo lo pedido (landing, login/registro multi-cuenta, login de
+administrador de plataforma, panel por negocio, panel general de super-admin,
+inventario, ventas con gráficas, proveedores con catálogo+carrito+pedidos
+rastreables, clientes/facturación, ingresos, pagos, modo claro/oscuro). Si el
+usuario pide algo nuevo, agregarlo respetando los 8 puntos de arriba antes de
+proponer cambios visuales o de flujo por cuenta propia.
 
 ## Repositorio
 

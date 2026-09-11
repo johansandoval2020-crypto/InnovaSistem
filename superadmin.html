@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InnovaSistem — Panel de administración general</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css?v=20260910c">
+</head>
+<body>
+
+<div class="orb-field" aria-hidden="true">
+  <span class="mini-orb o1"></span>
+  <span class="mini-orb o2"></span>
+  <span class="mini-orb o3"></span>
+</div>
+
+<nav class="dock" id="dock">
+  <svg class="dock-logo" viewBox="0 0 64 64" fill="none"><path d="M32 6c-9 8-9 16-4 22 3-9 8-13 4-22Z" fill="#6C5CE7"/><path d="M32 28c-14 2-20 10-20 20 10-6 16-6 20-20Z" fill="#221A3D"/><path d="M32 28c14 2 20 10 20 20-10-6-16-6-20-20Z" fill="#FFB8DD"/><rect x="24" y="46" width="16" height="12" rx="3" fill="#4A3F91"/></svg>
+
+  <button class="dock-btn active" data-view="resumen"><span class="dbi"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="tip">Resumen</span></button>
+  <button class="dock-btn" data-view="ingresos"><span class="dbi"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.3 9.8c0-1.2 1.2-2 2.7-2s2.7.9 2.7 2-1.2 1.6-2.7 2-2.7.9-2.7 2 1.2 2 2.7 2 2.7-.8 2.7-2"/></svg></span><span class="tip">Ingresos</span></button>
+  <button class="dock-btn" data-view="clientes"><span class="dbi"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.4 4.5 2.5 4.5 5.8"/></svg></span><span class="tip">Clientes</span></button>
+  <button class="dock-btn" data-view="pedidos"><span class="dbi"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5-9 5-9-5Z"/><path d="M3 8v9l9 5 9-5V8"/><path d="M12 13v9"/></svg></span><span class="tip">Pedidos</span></button>
+
+  <div class="dock-sep"></div>
+  <button class="dock-btn" id="themeToggle"><span class="dbi" id="themeIcon"><svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></span><span class="tip">Tema</span></button>
+  <button class="dock-btn" id="logoutBtn"><span class="dbi"><svg viewBox="0 0 24 24"><path d="M9 4H5v16h4"/><path d="M14 8l4 4-4 4"/><path d="M18 12H9"/></svg></span><span class="tip">Salir</span></button>
+</nav>
+
+<main class="shell">
+
+  <div class="topbar">
+    <div class="topbar-title">
+      <h1>Panel general</h1>
+      <p>Vista de administrador <span class="type-badge">InnovaSistem</span></p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-logout" id="logoutBtn2">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- RESUMEN -->
+  <section class="view active" id="view-resumen">
+    <div class="sec-head"><div><h1>Resumen</h1><p>Así está la plataforma hoy — todos los negocios registrados.</p></div></div>
+    <div class="kpi-row" id="kpiRow"></div>
+    <div class="chart-grid">
+      <div class="panel-box chart-box"><h2>Ventas de todos los negocios — últimos 7 días</h2><p class="sub">Ingresos diarios combinados</p><div id="barChart"></div></div>
+      <div class="panel-box chart-box"><h2>Tendencia</h2><p class="sub">Acumulado del período</p><div id="lineChartSmall"></div></div>
+    </div>
+    <div class="panel-box">
+      <h2>Últimos movimientos</h2><p class="sub">Ventas más recientes de cualquier negocio de la plataforma</p>
+      <div class="table-wrap"><table class="data-table" id="recentSalesTable"></table></div>
+    </div>
+  </section>
+
+  <!-- INGRESOS -->
+  <section class="view" id="view-ingresos">
+    <div class="sec-head"><div><h1>Ingresos por negocio</h1><p>Cuánto genera cada negocio registrado en la plataforma.</p></div></div>
+    <div class="panel-box">
+      <div class="table-wrap"><table class="data-table" id="revenueTable"></table></div>
+    </div>
+  </section>
+
+  <!-- CLIENTES (negocios registrados) -->
+  <section class="view" id="view-clientes">
+    <div class="sec-head">
+      <div><h1>Clientes</h1><p>Negocios registrados en InnovaSistem.</p></div>
+    </div>
+    <div class="card-row" id="businessGrid"></div>
+  </section>
+
+  <!-- PEDIDOS -->
+  <section class="view" id="view-pedidos">
+    <div class="sec-head">
+      <div><h1>Pedidos</h1><p>Compras a proveedores hechas por cada negocio y su seguimiento de entrega.</p></div>
+    </div>
+    <div class="panel-box">
+      <div class="table-wrap"><table class="data-table" id="ordersTable"></table></div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js?v=20260909a"></script>
+<script defer src="superadmin.js?v=20260911a"></script>
+</body>
+</html>

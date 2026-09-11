@@ -9,6 +9,7 @@
   var account = null;
   var STATE = null;
   var TYPE = null;
+  var BIZ_ID = null;
 
   /* ---------------- boot / account guard ---------------- */
   function loadAccount(){
@@ -16,6 +17,7 @@
     if(!raw){ window.location.href = 'login.html'; return false; }
     account = JSON.parse(raw);
     TYPE = account.type;
+    BIZ_ID = account.id || account.type;
     return true;
   }
 
@@ -35,13 +37,34 @@
   }
 
   function loadState(){
-    var key = 'innova_business_' + TYPE;
+    var key = 'innova_business_' + BIZ_ID;
     var raw = localStorage.getItem(key);
     if(raw){ STATE = JSON.parse(raw); }
     else { STATE = seedState(); saveState(); }
   }
   function saveState(){
-    localStorage.setItem('innova_business_' + TYPE, JSON.stringify(STATE));
+    localStorage.setItem('innova_business_' + BIZ_ID, JSON.stringify(STATE));
+  }
+
+  /* ---------------- pedidos a proveedores (visibles para el super-admin) ---------------- */
+  function pushOrder(providerName, items, total){
+    var raw = localStorage.getItem('innova_orders');
+    var orders = raw ? JSON.parse(raw) : [];
+    var etaDays = 2 + Math.floor(Math.random()*5);
+    var arrival = new Date(); arrival.setDate(arrival.getDate() + etaDays);
+    orders.unshift({
+      id: uid('ord'),
+      businessId: BIZ_ID,
+      businessName: STATE.name,
+      ownerName: account.ownerName || '—',
+      type: TYPE,
+      provider: providerName,
+      items: items,
+      total: total,
+      date: todayISO(),
+      arrivalDate: arrival.toISOString().slice(0,10)
+    });
+    localStorage.setItem('innova_orders', JSON.stringify(orders));
   }
 
   /* ---------------- topbar ---------------- */
@@ -337,11 +360,17 @@
     });
 
     document.getElementById('confirmPurchase').addEventListener('click', function(){
+      var orderItems = []; var orderTotal = 0;
       Object.keys(cart).forEach(function(id){
         var prod = STATE.inventory.find(function(p){ return p.id===id; });
-        if(prod) prod.stock += cart[id];
+        if(prod){
+          prod.stock += cart[id];
+          orderItems.push({name: prod.name, qty: cart[id]});
+          orderTotal += prod.price * cart[id];
+        }
       });
       saveState();
+      pushOrder(provider.name, orderItems, Math.round(orderTotal*100)/100);
       closeModal();
       toast('Compra confirmada — tu inventario se actualizó');
       renderProveedores();

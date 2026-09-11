@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="login.css?v=20260910b">
+<link rel="stylesheet" href="login.css?v=20260911a">
 </head>
 <body>
 
@@ -52,6 +52,21 @@
       </div>
       <button type="submit" class="submit-btn">Entrar a mi panel →</button>
       <p class="switch-line">¿No tenés cuenta? <button type="button" data-goto="register">Creá una aquí</button></p>
+      <p class="switch-line admin-switch">¿Sos administrador de la plataforma? <button type="button" id="gotoAdminLogin">Entrá acá</button></p>
+    </form>
+
+    <!-- ADMIN LOGIN -->
+    <form class="panel" id="panelAdminLogin">
+      <div class="field">
+        <label>Correo de administrador</label>
+        <input type="email" name="email" placeholder="admin24@gmail.com" required>
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" name="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="submit-btn">Entrar como administrador →</button>
+      <p class="switch-line"><button type="button" id="backFromAdminLogin">← Volver a iniciar sesión</button></p>
     </form>
 
     <!-- REGISTER -->
@@ -92,6 +107,6 @@
   </div>
 </div>
 
-<script defer src="login.js?v=20260908"></script>
+<script defer src="login.js?v=20260911a"></script>
 </body>
 </html>
