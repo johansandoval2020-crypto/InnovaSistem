@@ -136,14 +136,15 @@ No hay backend. Todo vive en `localStorage`:
      `cromo.png`, mucho más sutil que la paleta anterior — la imagen debe
      notarse fuerte, el overlay solo da legibilidad de fondo.
    - **"Cuadros redondeados" en toda la información ya existente**: se subió
-     `--radius-lg/md/sm` (32/22/14px) y además el `.hero-inner` y
-     `.section-head` (landing) ahora son paneles de vidrio pastel
-     (`background:rgba(252,251,255,.82)` + `backdrop-filter:blur`) en vez de
-     texto flotando directo sobre el fondo — así el texto sigue con tinta
-     oscura legible aunque el fondo de página ahora es oscuro. Mismo patrón
-     glass+blur en kpi-card/panel-box/item-card/modal-box (admin) y
-     auth-form-panel (login). Si se agregan bloques de info nuevos, seguir
-     este patrón (glass pastel + radio grande), no texto plano sobre imagen.
+     `--radius-lg/md/sm` (32/22/14px). El `.section-head` (landing) SÍ sigue
+     siendo un panel de vidrio oscuro (`--glass-dark`, `rgba(22,28,58,.82)` +
+     `backdrop-filter:blur`), pero el `.hero-inner` **YA NO tiene fondo**
+     (2026-09-11, a pedido explícito del usuario: "este cuadro quitalo") —
+     el h1/botones/stat del hero van directo sobre el fondo satín, sin panel
+     detrás. Si se vuelve a pedir un fondo ahí, usar `--glass-dark` para
+     mantener consistencia con `.section-head`. Mismo patrón glass+blur en
+     kpi-card/panel-box/item-card/modal-box (admin) y auth-form-panel
+     (login) — esos SÍ siguen con su panel de vidrio, no se tocaron.
    - Se eliminaron los pétalos de sakura cayendo (`.petals`/`initPetals` en
      login) y el SVG de pétalos del panel de login (`.art-petals-svg`) —
      sustituidos por los mini-orbes, que son el nuevo motivo decorativo del
@@ -252,6 +253,40 @@ No hay backend. Todo vive en `localStorage`:
      negocios registrados en el mismo navegador/dispositivo** donde se abre
      `superadmin.html`. No hay sincronización entre dispositivos — es una
      limitación conocida de la arquitectura, no un bug.
+
+9. **Hero simplificado (2026-09-11)** — el hero de `index.html` ya solo
+   muestra UN dato destacado: `<div class="stat"><b data-count="18">0</b>
+   <span>Tenemos 18 proveedores aliados</span></div>` dentro de
+   `.stats.stats-single` (grid de 1 columna). Los otros tres contadores que
+   había antes (rubros listos, clientes por negocio, % en tu control) se
+   eliminaron a pedido del usuario — no volver a agregarlos sin que lo pida.
+10. **Botón "eliminar negocio" en super-admin (2026-09-11)** — la vista
+    Clientes de `superadmin.js` (`renderClientes()`) ahora tiene un botón ✕
+    (`.del-biz-btn`) en cada tarjeta de negocio. Al hacer click, con
+    `confirm()` de por medio, llama a `deleteBusiness(accId)`, que:
+    - saca la cuenta de `innova_accounts`,
+    - borra `innova_business_<id>`,
+    - borra los pedidos de `innova_orders` que le pertenecían a ese negocio,
+    y vuelve a pintar la lista sin recargar la página. Esto se agregó porque
+    el usuario tenía negocios de prueba (duplicados de "ELpollasmetalicas",
+    "El jajas") que quería limpiar y no había manera de hacerlo desde la UI.
+11. **Documentación adicional para la tarea escolar del usuario** — existe
+    `ESTRUCTURA_SITIO.md` en la raíz con un desglose de la estructura del
+    sitio (páginas, secciones, menús, formularios, encabezado, footer,
+    organización de contenidos, estructura de archivos) — lo pidió el
+    usuario para un trabajo/documento sobre "Estructuración del sitio web"
+    (parece un punto 9.1 de una rúbrica de clase). Si pide algo similar para
+    otros puntos de esa rúbrica (9.2 HTML5 semántico, 9.3 CSS), respondé
+    directamente en el chat basándote en el código real (no inventar) —
+    ya se hizo una vez para 9.2 y 9.3 sin crear archivo nuevo.
+12. **Respaldo del proyecto (2026-09-11)** — además de GitHub, todo el
+    código (los 21 archivos de texto: html/css/js/md) está subido a una
+    carpeta de Google Drive llamada "Innova sistem"
+    (https://drive.google.com/drive/folders/1-npWslf-sSgctvZ6nj-VE9rz_oALVs0G).
+    Las 5 imágenes de `imagenes/` NO se pudieron subir ahí (muy pesadas para
+    la herramienta de texto de Drive) — hay una subcarpeta "imagenes" vacía
+    esperando que el usuario las arrastre manualmente si quiere el respaldo
+    completo.
 
 ## Cómo previsualizar
 
