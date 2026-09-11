@@ -9,7 +9,19 @@ preguntas ni deshacer trabajo.
 
 ## Estructura de archivos
 
-- `index.html` / `styles.css` / `main.js` — landing pública.
+- `index.html` / `styles.css` / `main.js` — landing pública. **Desde
+  2026-09-11 el index SOLO tiene el hero** (título + CTA + 1 stat) más el
+  cta-band final y el footer — ya NO es una sola página larga con scroll.
+  Las 4 secciones que antes eran anchors (`#funciona`/`#problemas`/
+  `#ofrecemos`/`#sectores`) ahora son páginas HTML independientes:
+  `como-funciona.html`, `problemas.html`, `que-ofrecemos.html`,
+  `sectores.html`. Cada una reutiliza el mismo `styles.css`, el mismo
+  nav/mobileMenu/footer (con los links ya apuntando a los `.html`
+  correspondientes en vez de a anchors), y termina con el mismo
+  cta-band antes del footer. Si se agrega una sección nueva a la
+  landing, seguir este mismo patrón (página propia, no anchor) — el
+  usuario pidió explícitamente que el menú navegara a páginas
+  distintas en vez de hacer scroll dentro de una sola página.
 - `login.html` / `login.css` / `login.js` — login (negocio + administrador) y
   registro (con selector de tipo de negocio).
 - `admin.html` / `admin.css` / `admin.js` — panel de administración de UN
