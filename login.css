@@ -109,6 +109,17 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;}
 .submit-btn:hover{transform:translateY(-2px);box-shadow:0 14px 26px -12px rgba(34,26,61,.5);}
 .submit-btn:active{transform:scale(.97);}
 
+.admin-btn{
+  margin-top:10px;padding:11px;border-radius:11px;background:rgba(74,63,145,.1);
+  border:1.5px solid var(--midnight);color:var(--midnight);
+  font-weight:700;font-size:.85rem;letter-spacing:.01em;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:transform .3s var(--ease), background .3s, box-shadow .3s;
+}
+.admin-btn svg{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.admin-btn:hover{background:var(--midnight);color:var(--beige);transform:translateY(-2px);box-shadow:0 14px 26px -12px rgba(74,63,145,.55);}
+.admin-btn:active{transform:scale(.97);}
+
 .form-msg{font-size:.8rem;padding:9px 12px;border-radius:9px;display:none;}
 .form-msg.show{display:block;}
 .form-msg.err{background:rgba(232,95,168,.22);color:#9A2E6E;}
@@ -116,8 +127,6 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;}
 
 .switch-line{font-size:.82rem;text-align:center;color:rgba(28,24,48,.65);margin-top:2px;}
 .switch-line button{color:var(--midnight);font-weight:700;text-decoration:underline;}
-.switch-line.admin-switch{font-size:.74rem;opacity:.7;margin-top:10px;}
-.switch-line.admin-switch button{color:rgba(28,24,48,.65);font-weight:600;}
 
 .auth-art-panel{
   position:relative;overflow:hidden;background:#0A0A14;
