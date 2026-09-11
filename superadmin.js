@@ -21,9 +21,22 @@
     var raw = localStorage.getItem('innova_accounts');
     return raw ? JSON.parse(raw) : [];
   }
+  function saveAccounts(list){
+    localStorage.setItem('innova_accounts', JSON.stringify(list));
+  }
   function getOrders(){
     var raw = localStorage.getItem('innova_orders');
     return raw ? JSON.parse(raw) : [];
+  }
+  function saveOrders(list){
+    localStorage.setItem('innova_orders', JSON.stringify(list));
+  }
+  function deleteBusiness(accId){
+    var accounts = getAccounts().filter(function(a){ return a.id !== accId; });
+    saveAccounts(accounts);
+    localStorage.removeItem('innova_business_' + accId);
+    var orders = getOrders().filter(function(o){ return o.businessId !== accId; });
+    saveOrders(orders);
   }
   function getBusinessState(acc){
     var raw = localStorage.getItem('innova_business_' + (acc.id || acc.type));
@@ -32,6 +45,15 @@
   function typeLabel(type){
     var t = window.INNOVA_DATA && window.INNOVA_DATA.getType(type);
     return t ? t.label : type;
+  }
+
+  /* ---------------- toast ---------------- */
+  function toast(msg){
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(function(){ el.classList.remove('show'); }, 2600);
   }
 
   /* ---------------- theme ---------------- */
@@ -201,7 +223,9 @@
     var accounts = getAccounts();
     var html = accounts.map(function(acc, i){
       var initials = (acc.businessName||'?').split(' ').map(function(w){return w[0];}).slice(0,2).join('');
-      return '<div class="item-card client-card" style="animation-delay:'+(i*0.02)+'s; cursor:default;">'+
+      return '<div class="item-card client-card" style="animation-delay:'+(i*0.02)+'s; cursor:default; position:relative;">'+
+        '<button class="del-biz-btn" data-id="'+acc.id+'" data-name="'+acc.businessName+'" title="Eliminar negocio" '+
+          'style="position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;background:rgba(232,95,168,.14);color:#E85FA8;font-size:.85rem;line-height:1;cursor:pointer;">✕</button>'+
         '<div class="row1"><div style="display:flex;align-items:center;gap:10px;"><div class="avatar">'+initials+'</div>'+
         '<div><div class="name" style="margin-bottom:0;">'+acc.businessName+'</div><div class="meta" style="margin-top:2px;"><span>'+(acc.ownerName||'—')+'</span></div></div></div></div>'+
         '<div class="meta" style="margin-top:12px;"><span>Rubro</span><span class="price">'+typeLabel(acc.type)+'</span></div>'+
@@ -213,6 +237,17 @@
       html = '<div class="empty-note">Todavía no se registró ningún negocio en la plataforma.</div>';
     }
     document.getElementById('businessGrid').innerHTML = html;
+    document.querySelectorAll('.del-biz-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute('data-id');
+        var name = btn.getAttribute('data-name');
+        if(!confirm('¿Eliminar "'+name+'" de la plataforma? Esta acción no se puede deshacer.')) return;
+        deleteBusiness(id);
+        toast('Negocio eliminado');
+        renderClientes();
+      });
+    });
   }
 
   /* ---------------- PEDIDOS ---------------- */
