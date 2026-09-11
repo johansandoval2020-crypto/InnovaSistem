@@ -297,6 +297,7 @@ footer{background:rgba(34,26,61,.62);color:rgba(241,238,255,.7);padding:70px 0 2
 
 /* ---------------- counters ---------------- */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:60px;}
+.stats.stats-single{grid-template-columns:1fr;justify-content:center;}
 .stat{text-align:center;}
 .stat b{display:block;font-family:var(--ff-serif);font-size:clamp(2rem,4vw,2.8rem);color:var(--beige);}
 .stat span{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(241,238,255,.6);}
