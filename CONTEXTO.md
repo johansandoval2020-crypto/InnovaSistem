@@ -61,25 +61,38 @@ No hay backend. Todo vive en `localStorage`:
      - `--rosy` → `#FFB8DD` (rosa pastel, antes rosado cálido `#D3968C`)
      - `--beige` → `#F1EEFF` (lavanda muy claro, antes crema `#F7F4D5`)
      - `--ink`/`--paper` también migraron a tonos fríos (`#1C1830` / `#FCFBFF`).
-     Nuevas variables de tarjetas en `styles.css` — **corregidas el
-     2026-09-11**: el usuario pidió sacar el amarillo/rosa/verde que
-     habían quedado en step-cards/offer-cards/problem-cards y dejar
-     SOLO tonos azules (pasteles claros + dos variantes oscuras/navy
-     para variedad, nunca amarillo/rosa/verde/naranja):
-     `--p-lav` (#E4E7FF), `--p-sky` (#DCEEFF), `--p-ice` (#E8F1FA),
-     `--p-steel` (#CFE0F0) — pasteles claros con texto oscuro — y
-     `--p-navy` (#1E2A52), `--p-deep` (#223159) — tarjetas OSCURAS, que
-     llevan texto claro (`var(--beige)` / `rgba(241,238,255,.75)`) en
-     vez del texto oscuro por defecto; ver los overrides
-     `.offer-card:nth-child(N) h3/p` y `.step-card:nth-child(3) h3/p`
-     en `styles.css`. Si se agrega una tarjeta nueva a esta rotación,
-     usar únicamente estas 6 variables (nunca los viejos nombres
-     `--p-rose`/`--p-mint`/`--p-butter`/`--p-peach`, que ya no existen)
-     y acordarse de poner texto claro si el fondo elegido es
-     `--p-navy`/`--p-deep`. También se quitó el rosa (`var(--rosy-dark)`)
-     del `.seal` de las offer-cards y del `.rule` de las sector-cards,
-     ahora usan `var(--moss)`/`var(--p-sky)`. Seguir sin reintroducir
-     verdes ni amarillos/rosas/naranjas en los fondos de tarjetas.
+     Tarjetas de la landing en `styles.css` — pasaron por DOS ajustes de
+     paleta después del rediseño inicial, hasta llegar al estado final
+     (2026-09-11): primero se probó una mezcla de pasteles claros +
+     algunas oscuras, pero el usuario mandó capturas mostrando que
+     quedaba desordenado ("cámbiame todo esto") y pidió explícitamente
+     el MISMO azul oscuro en TODAS las tarjetas de la landing, sin
+     mezclar con claros. Estado final: `--p-navy` (#1E2A52) y `--p-deep`
+     (#223159) — dos tonos de azul oscuro casi iguales, alternados por
+     `:nth-child(even)` solo para dar textura sutil — son el ÚNICO fondo
+     de `.step-card`, `.problem-card` y `.offer-card`, y también de
+     `.hero-inner`/`.section-head` (como `--glass-dark`, una versión con
+     `rgba(22,28,58,.82)` + `backdrop-filter:blur` en vez de sólido).
+     Todo el texto dentro de estas tarjetas/paneles es CLARO
+     (`var(--beige)` / `rgba(241,238,255,.7-.75)`), nunca oscuro — si se
+     agrega una tarjeta nueva a esta familia, seguir ese patrón (fondo
+     `--p-navy` o `--p-deep`, texto beige/claro, nunca texto oscuro ni
+     fondo pastel claro). Las variables intermedias de la primera
+     iteración (`--p-lav`, `--p-ice`, `--p-steel`, y las de la MUY
+     primera iteración `--p-rose`/`--p-mint`/`--p-butter`/`--p-peach`)
+     ya NO EXISTEN — no reintroducirlas. `--p-sky` (#DCEEFF) sigue
+     viva pero solo como color de ACENTO (texto de `.tag`, `.hero .sub`,
+     iconos), no como fondo de tarjeta. También se quitó el rosa
+     (`var(--rosy-dark)`) del `.seal` de las offer-cards y del `.rule`
+     de las sector-cards, ahora usan `var(--moss)`/`var(--p-sky)`, y el
+     wash de `.sector-band` pasó de lavanda claro a oscuro
+     (`rgba(10,8,30,.25)`) para no cortar el mood oscuro. El botón
+     "Ver cómo funciona" (`.hero-cta .btn-outline`) tiene su propio
+     override de color porque el genérico `.btn-outline` asume fondo
+     claro (se usa también en el nav, que sigue siendo una píldora
+     clara) — si el hero-inner vuelve a ser claro algún día, revisar
+     ese override. Seguir sin reintroducir verdes ni amarillos/rosas/
+     naranjas/pasteles claros en los fondos de tarjetas de la landing.
    - **Imágenes** (en `imagenes/`, usadas literalmente, NO recreadas en SVG):
      - `cromo.png` — tela/satín azul metálico abstracto. Es el **fondo fijo
        de TODO el sitio**, aplicado directo en `body` (`background-image` +
