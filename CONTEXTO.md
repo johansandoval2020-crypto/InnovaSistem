@@ -61,10 +61,25 @@ No hay backend. Todo vive en `localStorage`:
      - `--rosy` → `#FFB8DD` (rosa pastel, antes rosado cálido `#D3968C`)
      - `--beige` → `#F1EEFF` (lavanda muy claro, antes crema `#F7F4D5`)
      - `--ink`/`--paper` también migraron a tonos fríos (`#1C1830` / `#FCFBFF`).
-     Nuevas variables de tarjetas pastel/cromáticas en `styles.css`:
-     `--p-lav`, `--p-sky`, `--p-rose`, `--p-mint`, `--p-butter`, `--p-peach` —
-     se usan para rotar el fondo de step-cards/offer-cards/problem-cards.
-     Seguir sin reintroducir verdes en ningún lado.
+     Nuevas variables de tarjetas en `styles.css` — **corregidas el
+     2026-09-11**: el usuario pidió sacar el amarillo/rosa/verde que
+     habían quedado en step-cards/offer-cards/problem-cards y dejar
+     SOLO tonos azules (pasteles claros + dos variantes oscuras/navy
+     para variedad, nunca amarillo/rosa/verde/naranja):
+     `--p-lav` (#E4E7FF), `--p-sky` (#DCEEFF), `--p-ice` (#E8F1FA),
+     `--p-steel` (#CFE0F0) — pasteles claros con texto oscuro — y
+     `--p-navy` (#1E2A52), `--p-deep` (#223159) — tarjetas OSCURAS, que
+     llevan texto claro (`var(--beige)` / `rgba(241,238,255,.75)`) en
+     vez del texto oscuro por defecto; ver los overrides
+     `.offer-card:nth-child(N) h3/p` y `.step-card:nth-child(3) h3/p`
+     en `styles.css`. Si se agrega una tarjeta nueva a esta rotación,
+     usar únicamente estas 6 variables (nunca los viejos nombres
+     `--p-rose`/`--p-mint`/`--p-butter`/`--p-peach`, que ya no existen)
+     y acordarse de poner texto claro si el fondo elegido es
+     `--p-navy`/`--p-deep`. También se quitó el rosa (`var(--rosy-dark)`)
+     del `.seal` de las offer-cards y del `.rule` de las sector-cards,
+     ahora usan `var(--moss)`/`var(--p-sky)`. Seguir sin reintroducir
+     verdes ni amarillos/rosas/naranjas en los fondos de tarjetas.
    - **Imágenes** (en `imagenes/`, usadas literalmente, NO recreadas en SVG):
      - `cromo.png` — tela/satín azul metálico abstracto. Es el **fondo fijo
        de TODO el sitio**, aplicado directo en `body` (`background-image` +
