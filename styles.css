@@ -97,7 +97,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;}
 .nav.scrolled .nav-inner{padding:8px 10px 8px 18px;box-shadow:0 8px 24px -14px rgba(34,26,61,.35);}
 
 .brand{display:flex;align-items:center;gap:10px;font-family:var(--ff-serif);font-weight:600;font-size:1.05rem;letter-spacing:.02em;color:var(--dark-green);white-space:nowrap;}
-.brand svg{width:30px;height:30px;flex:none;}
+.brand svg, .brand img{width:30px;height:30px;flex:none;}
+.mascot-logo{border-radius:50%;object-fit:cover;background:#fff;display:block;box-shadow:0 0 0 1px rgba(34,26,61,.08);}
 
 .nav-links{display:flex;align-items:center;gap:26px;}
 .nav-links a{
@@ -163,7 +164,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;}
   font-size:clamp(3.2rem,8vw,6.2rem);color:var(--dark-green);
   text-transform:uppercase;letter-spacing:.01em;
 }
-.hero h1 .accent{color:var(--rosy-dark);font-style:italic;text-transform:none;}
+.hero h1 .accent{color:var(--moss);font-style:italic;text-transform:none;}
 .hero .sub{
   margin-top:18px;font-family:var(--ff-serif);font-size:clamp(1.3rem,2.4vw,1.9rem);
   color:var(--midnight);font-weight:500;
@@ -313,7 +314,7 @@ footer{background:rgba(34,26,61,.62);color:rgba(241,238,255,.7);padding:70px 0 2
   display:flex;align-items:center;justify-content:center;
   animation:splash-hide 4.5s forwards;
 }
-#splash svg{width:60px;height:60px;animation:splash-pulse 1.1s ease-in-out infinite;}
+#splash svg, #splash img{width:60px;height:60px;animation:splash-pulse 1.1s ease-in-out infinite;}
 @keyframes splash-pulse{0%,100%{transform:scale(1);opacity:.7;}50%{transform:scale(1.15);opacity:1;}}
 @keyframes splash-hide{0%{opacity:1;visibility:visible;}85%{opacity:1;visibility:visible;}100%{opacity:0;visibility:hidden;}}
 

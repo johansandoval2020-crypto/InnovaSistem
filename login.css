@@ -66,7 +66,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;}
 .auth-form-panel::-webkit-scrollbar-thumb{background:rgba(34,26,61,.25);border-radius:6px;}
 
 .auth-logo{display:flex;align-items:center;gap:10px;font-family:var(--ff-serif);font-weight:600;color:var(--dark-green);font-size:1.05rem;}
-.auth-logo svg{width:28px;height:28px;}
+.auth-logo svg, .auth-logo img{width:28px;height:28px;}
+.mascot-logo{border-radius:50%;object-fit:cover;background:#fff;display:block;box-shadow:0 0 0 1px rgba(34,26,61,.08);}
 
 .auth-heading h1{font-family:var(--ff-serif);font-size:1.7rem;color:var(--dark-green);margin:2px 0 4px;}
 .auth-heading p{margin:0;font-size:.86rem;color:rgba(28,24,48,.65);}
