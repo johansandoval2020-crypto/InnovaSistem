@@ -842,9 +842,13 @@
     return t;
   });
 
+  // Tipos que vienen en los datos de ejemplo de sistema_multinegocios.sql
+  var ALIASES = {'Comida':'pupuseria', 'Taller Mecanico':'taller', 'Salud':'clinica'};
+
   // 'otro:<texto>' → oficio escrito a mano, categoría general
   function getType(id){
     if(!id) return null;
+    if(ALIASES[id]) id = ALIASES[id];
     if(BY_ID[id]) return BY_ID[id];
     var cat = CATEGORIES.general;
     var label = id.indexOf('otro:') === 0 ? id.slice(5) : id;

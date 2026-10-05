@@ -2,69 +2,70 @@
   "use strict";
 
   function safe(fn, name){ try{ return fn(); }catch(err){ console.warn('[InnovaSistem admin]', name, err); } }
-  function uid(prefix){ return prefix + '-' + Math.random().toString(36).slice(2,9); }
   function money(n){ return '$' + (Math.round(n*100)/100).toFixed(2); }
-  function todayISO(){ return new Date().toISOString().slice(0,10); }
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function isoDate(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+  function todayISO(){ return isoDate(new Date()); }
+  // Escapa texto que viene de la base antes de meterlo en innerHTML.
+  function esc(v){
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function norm(v){ return String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 
-  var account = null;
+  // Las ventas llegan una fila por producto; esto las junta por venta.
+  function groupSales(rows){
+    var map = {}; var list = [];
+    rows.forEach(function(r){
+      var g = map[r.saleId];
+      if(!g){
+        g = map[r.saleId] = {saleId:r.saleId, date:r.date, client:r.client, items:[], amount:0, method:r.method, status:r.status};
+        list.push(g);
+      }
+      g.items.push(r.item + ' x' + r.qty);
+      g.amount = Math.round((g.amount + r.amount)*100)/100;
+    });
+    return list;
+  }
+
   var STATE = null;
   var TYPE = null;
-  var BIZ_ID = null;
 
-  /* ---------------- boot / account guard ---------------- */
-  function loadAccount(){
-    var raw = localStorage.getItem('innova_account');
-    if(!raw){ window.location.href = 'login.html'; return false; }
-    account = JSON.parse(raw);
-    TYPE = account.type;
-    BIZ_ID = account.id || account.type;
-    return true;
-  }
+  /* ---------------- estado desde la base de datos (api/negocio.php) ---------------- */
+  function goLogin(){ window.location.href = 'login.html'; }
 
-  function seedState(){
-    var products = window.INNOVA_DATA.productsFor(TYPE).map(function(p,i){
-      return {id:'inv-'+i, name:p.name, price:p.price, stock:0};
+  // Trae el estado del negocio; si no hay sesión vuelve al login.
+  function refresh(){
+    return window.innovaApi('negocio.php').then(function(r){
+      if(r.status === 401){ goLogin(); return Promise.reject('sin sesión'); }
+      if(!r.ok){ toast(r.data.error || 'No se pudieron cargar los datos'); return Promise.reject(r.data.error); }
+      STATE = r.data;
+      TYPE = STATE.type;
     });
-    return {
-      name: account.businessName || 'Mi negocio',
-      phone:'', address:'',
-      inventory: products,
-      providersAdded: [],
-      clients: [],
-      sales: [],
-      payments: []
-    };
   }
 
-  function loadState(){
-    var key = 'innova_business_' + BIZ_ID;
-    var raw = localStorage.getItem(key);
-    if(raw){ STATE = JSON.parse(raw); }
-    else { STATE = seedState(); saveState(); }
-  }
-  function saveState(){
-    localStorage.setItem('innova_business_' + BIZ_ID, JSON.stringify(STATE));
+  // Un negocio nuevo arranca con el inventario de su oficio en stock 0.
+  function seedIfEmpty(){
+    if(STATE.inventory.length) return Promise.resolve();
+    var typeInfo = window.INNOVA_DATA.getType(TYPE);
+    return window.innovaApi('negocio.php', {
+      action:'seed',
+      categoria: typeInfo.categoryLabel,
+      products: window.INNOVA_DATA.productsFor(TYPE)
+    }).then(refresh);
   }
 
-  /* ---------------- pedidos a proveedores (visibles para el super-admin) ---------------- */
-  function pushOrder(providerName, items, total){
-    var raw = localStorage.getItem('innova_orders');
-    var orders = raw ? JSON.parse(raw) : [];
-    var etaDays = 2 + Math.floor(Math.random()*5);
-    var arrival = new Date(); arrival.setDate(arrival.getDate() + etaDays);
-    orders.unshift({
-      id: uid('ord'),
-      businessId: BIZ_ID,
-      businessName: STATE.name,
-      ownerName: account.ownerName || '—',
-      type: TYPE,
-      provider: providerName,
-      items: items,
-      total: total,
-      date: todayISO(),
-      arrivalDate: arrival.toISOString().slice(0,10)
+  // Manda un cambio a la API, recarga el estado y vuelve a pintar.
+  function act(file, body, okMsg){
+    return window.innovaApi(file, body).then(function(r){
+      if(r.status === 401){ goLogin(); return false; }
+      if(!r.ok){ toast(r.data.error || 'No se pudo guardar'); return false; }
+      return refresh().then(function(){
+        if(okMsg) toast(okMsg);
+        return true;
+      });
     });
-    localStorage.setItem('innova_orders', JSON.stringify(orders));
   }
 
   /* ---------------- topbar ---------------- */
@@ -104,7 +105,7 @@
       });
     });
     function logout(){
-      window.location.href = 'login.html';
+      window.innovaApi('logout.php', {}).then(goLogin);
     }
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('logoutBtn2').addEventListener('click', logout);
@@ -139,7 +140,7 @@
     var days = [];
     for(var i=n-1;i>=0;i--){
       var d = new Date(); d.setDate(d.getDate()-i);
-      days.push(d.toISOString().slice(0,10));
+      days.push(isoDate(d));
     }
     return days.map(function(day){
       var total = sales.filter(function(s){ return s.date === day; })
@@ -207,7 +208,7 @@
     days7.forEach(function(d){ run += d.value; cumulative.push({label:d.label, value:Math.round(run*100)/100}); });
     document.getElementById('lineChartSmall').innerHTML = buildLineChart(cumulative, 'var(--rosy-dark)');
 
-    var recent = STATE.sales.slice(0,6);
+    var recent = groupSales(STATE.sales).slice(0,6);
     document.getElementById('recentSalesTable').innerHTML = salesTableHTML(recent, false);
   }
   function kpi(lbl, val, deltaClass){
@@ -218,6 +219,7 @@
   /* ---------------- INVENTARIO ---------------- */
   function renderInventario(){
     var typeInfo = window.INNOVA_DATA.getType(TYPE);
+    var owner = STATE.me.isOwner;
     document.getElementById('invTitle').textContent = 'Inventario de ' + typeInfo.unitPlural;
     document.getElementById('invSub').textContent = 'Stock y precio de cada ' + typeInfo.unit + '. Se abastece comprándole a tus proveedores.';
 
@@ -225,16 +227,57 @@
       var low = p.stock < 30;
       var pct = Math.min(100, (p.stock/300)*100);
       return '<div class="item-card" style="animation-delay:'+(i*0.03)+'s">'+
-        '<div class="name">'+p.name+'</div>'+
+        '<div class="name">'+esc(p.name)+'</div>'+
         '<div class="meta"><span>Stock: '+p.stock+'</span><span class="price">'+money(p.price)+'</span></div>'+
         '<div class="stock-bar"><i class="'+(low?'low':'')+'" style="width:'+pct+'%"></i></div>'+
         (low ? '<div style="font-size:.72rem;color:var(--rosy-dark);margin-top:8px;">⚠ Stock bajo — reabastecer</div>' : '') +
+        (owner ? '<div class="card-actions"><button class="link-btn" data-edit-prod="'+p.id+'">Editar</button></div>' : '') +
       '</div>';
     }).join('');
     if(!STATE.inventory.length){
-      html = '<div class="empty-note">Todavía no tenés '+typeInfo.unitPlural+'. Comprale a un proveedor en la sección Proveedores para abastecer tu inventario.</div>';
+      html = '<div class="empty-note">Todavía no tenés '+typeInfo.unitPlural+'.</div>';
     }
-    document.getElementById('inventoryGrid').innerHTML = html;
+    var grid = document.getElementById('inventoryGrid');
+    grid.innerHTML = html;
+    grid.querySelectorAll('[data-edit-prod]').forEach(function(btn){
+      btn.onclick = function(){
+        var id = btn.getAttribute('data-edit-prod');
+        openProductModal(STATE.inventory.find(function(p){ return p.id === id; }));
+      };
+    });
+  }
+
+  // Editar / eliminar producto (solo el dueño).
+  function openProductModal(prod){
+    openModal(
+      '<div class="modal-head"><h3>Editar producto</h3><button class="modal-close" id="mClose">✕</button></div>'+
+      '<form id="prodForm" class="form-grid">'+
+        '<div class="f-field full"><label>Nombre</label><input name="name" required maxlength="100" value="'+esc(prod.name)+'"></div>'+
+        '<div class="f-field"><label>Precio ($)</label><input name="price" type="number" step="0.01" min="0" required value="'+prod.price+'"></div>'+
+        '<div class="f-field"><label>Stock</label><input name="stock" type="number" step="1" min="0" required value="'+prod.stock+'"></div>'+
+        '<div class="full"><p class="sub" style="font-size:.78rem;">Si cambiás el stock a mano queda registrado como movimiento de inventario.</p>'+
+          '<button class="save-btn" type="submit">Guardar cambios</button>'+
+          '<button class="danger-btn" type="button" id="prodDelete">Eliminar</button>'+
+        '</div>'+
+      '</form>'
+    );
+    document.getElementById('mClose').addEventListener('click', closeModal);
+    document.getElementById('prodForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      act('productos.php', {
+        action: 'update', id: prod.id,
+        name: fd.get('name'), price: parseFloat(fd.get('price')), stock: parseInt(fd.get('stock'), 10)
+      }, 'Producto actualizado').then(function(ok){
+        if(ok){ closeModal(); renderInventario(); }
+      });
+    });
+    document.getElementById('prodDelete').addEventListener('click', function(){
+      if(!confirm('¿Eliminar "'+prod.name+'"? Si ya se vendió, deja de aparecer pero sus ventas quedan en el historial.')) return;
+      act('productos.php', {action:'delete', id:prod.id}, 'Producto eliminado').then(function(ok){
+        if(ok){ closeModal(); renderInventario(); }
+      });
+    });
   }
 
   /* ---------------- PROVEEDORES ---------------- */
@@ -260,8 +303,8 @@
     document.querySelectorAll('[data-rm]').forEach(function(btn){
       btn.addEventListener('click', function(e){
         e.stopPropagation();
-        STATE.providersAdded.splice(parseInt(btn.getAttribute('data-rm'),10), 1);
-        saveState(); renderProveedores(); toast('Proveedor quitado');
+        var prov = STATE.providersAdded[parseInt(btn.getAttribute('data-rm'),10)];
+        act('proveedores.php', {action:'remove', id:prov.id}, 'Proveedor quitado').then(renderProveedores);
       });
     });
 
@@ -286,10 +329,11 @@
         if(!btn || btn.classList.contains('added')) return;
         var name = decodeURIComponent(btn.getAttribute('data-add'));
         var found = directory.find(function(p){ return p.name === name; });
-        STATE.providersAdded.push(found);
-        saveState();
-        btn.textContent = 'Agregado ✓'; btn.classList.add('added');
-        toast('Proveedor agregado a tu negocio');
+        btn.classList.add('added');
+        act('proveedores.php', {action:'add', name:found.name, desc:found.desc}, 'Proveedor agregado a tu negocio').then(function(ok){
+          if(ok) btn.textContent = 'Agregado ✓';
+          else btn.classList.remove('added');
+        });
       });
     });
   }
@@ -360,77 +404,94 @@
     });
 
     document.getElementById('confirmPurchase').addEventListener('click', function(){
-      var orderItems = []; var orderTotal = 0;
-      Object.keys(cart).forEach(function(id){
-        var prod = STATE.inventory.find(function(p){ return p.id===id; });
-        if(prod){
-          prod.stock += cart[id];
-          orderItems.push({name: prod.name, qty: cart[id]});
-          orderTotal += prod.price * cart[id];
-        }
+      var items = Object.keys(cart).map(function(id){ return {id:id, qty:cart[id]}; });
+      this.disabled = true;
+      act('comprar.php', {providerId:provider.id, items:items}, 'Compra confirmada — tu inventario se actualizó').then(function(ok){
+        if(!ok) return;
+        closeModal();
+        renderProveedores();
       });
-      saveState();
-      pushOrder(provider.name, orderItems, Math.round(orderTotal*100)/100);
-      closeModal();
-      toast('Compra confirmada — tu inventario se actualizó');
-      renderProveedores();
     });
   }
 
   /* ---------------- CLIENTES ---------------- */
+  var clientQuery = '';
   function renderClientes(){
     var typeInfo = window.INNOVA_DATA.getType(TYPE);
-    var html = STATE.clients.map(function(c, i){
+    var q = norm(clientQuery);
+    var list = STATE.clients.filter(function(c){
+      return !q || norm(c.name + ' ' + c.phone + ' ' + c.email).indexOf(q) !== -1;
+    });
+    var html = list.map(function(c, i){
       var initials = c.name.split(' ').map(function(w){return w[0];}).slice(0,2).join('');
       var hist = c.purchases.map(function(p){
-        return '<div><span>'+p.date+' · '+p.item+' x'+p.qty+'</span><strong>'+money(p.amount)+'</strong></div>';
+        return '<div><span>'+p.date+' · '+esc(p.item)+' x'+p.qty+'</span><strong>'+money(p.amount)+'</strong></div>';
       }).join('') || '<div class="empty-note" style="padding:8px 0;">Sin compras registradas</div>';
-      return '<div class="item-card client-card" data-idx="'+i+'" style="animation-delay:'+(i*0.02)+'s">'+
-        '<div class="row1"><div style="display:flex;align-items:center;gap:10px;"><div class="avatar">'+initials+'</div>'+
-        '<div><div class="name" style="margin-bottom:0;">'+c.name+'</div><div class="meta" style="margin-top:2px;"><span>'+c.phone+'</span></div></div></div>'+
+      return '<div class="item-card client-card" data-id="'+c.id+'" style="animation-delay:'+(i*0.02)+'s">'+
+        '<div class="row1"><div style="display:flex;align-items:center;gap:10px;"><div class="avatar">'+esc(initials)+'</div>'+
+        '<div><div class="name" style="margin-bottom:0;">'+esc(c.name)+'</div><div class="meta" style="margin-top:2px;"><span>'+esc(c.phone)+'</span></div></div></div>'+
         '<span class="caret">▾</span></div>'+
         '<div class="meta" style="margin-top:12px;"><span>Total comprado</span><span class="price">'+money(c.total)+'</span></div>'+
+        '<div class="card-actions"><button class="link-btn" data-edit-cli="'+c.id+'">Editar</button><button class="link-btn danger" data-del-cli="'+c.id+'">Eliminar</button></div>'+
         '<div class="hist">'+hist+'</div>'+
       '</div>';
     }).join('');
+    if(q && !list.length) html = '<div class="empty-note">Ningún cliente coincide con “'+esc(clientQuery)+'”.</div>';
     html += '<div class="add-tile" id="addClientTile"><div class="plus-circle">+</div>Agregar '+typeInfo.clientNoun+'</div>';
-    document.getElementById('clientsGrid').innerHTML = html;
+    var grid = document.getElementById('clientsGrid');
+    grid.innerHTML = html;
 
-    document.querySelectorAll('.client-card').forEach(function(card){
+    grid.querySelectorAll('.client-card').forEach(function(card){
       card.addEventListener('click', function(){ card.classList.toggle('open'); });
     });
+    function findClient(id){ return STATE.clients.find(function(c){ return c.id === id; }); }
+    grid.querySelectorAll('[data-edit-cli]').forEach(function(btn){
+      btn.addEventListener('click', function(e){ e.stopPropagation(); openClientModal(findClient(btn.getAttribute('data-edit-cli'))); });
+    });
+    grid.querySelectorAll('[data-del-cli]').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var c = findClient(btn.getAttribute('data-del-cli'));
+        if(!confirm('¿Eliminar a "'+c.name+'"? Si ya compró, deja de aparecer pero sus ventas quedan en el historial.')) return;
+        act('clientes.php', {action:'delete', id:c.id}, 'Cliente eliminado').then(function(ok){ if(ok) renderClientes(); });
+      });
+    });
+    document.getElementById('addClientTile').addEventListener('click', function(){ openClientModal(null); });
 
-    document.getElementById('addClientTile').addEventListener('click', function(){
-      var itemOptions = STATE.inventory.map(function(p){ return '<option value="'+p.id+'">'+p.name+' — '+money(p.price)+'</option>'; }).join('');
-      openModal(
-        '<div class="modal-head"><h3>Agregar '+typeInfo.clientNoun+'</h3><button class="modal-close" id="mClose">✕</button></div>'+
-        '<form id="cliForm" class="form-grid">'+
-          '<div class="f-field full"><label>Nombre</label><input name="name" required></div>'+
-          '<div class="f-field full"><label>Teléfono</label><input name="phone" placeholder="7000-0000"></div>'+
+    var search = document.getElementById('clientSearch');
+    search.oninput = function(){ clientQuery = search.value; renderClientes(); };
+  }
+
+  // Agregar / editar cliente. Al agregar se puede registrar su primera compra.
+  function openClientModal(c){
+    var typeInfo = window.INNOVA_DATA.getType(TYPE);
+    var isNew = !c;
+    var itemOptions = STATE.inventory.filter(function(p){ return p.stock > 0; }).map(function(p){
+      return '<option value="'+p.id+'">'+esc(p.name)+' — '+money(p.price)+' (stock '+p.stock+')</option>';
+    }).join('');
+    openModal(
+      '<div class="modal-head"><h3>'+(isNew ? 'Agregar ' : 'Editar ')+typeInfo.clientNoun+'</h3><button class="modal-close" id="mClose">✕</button></div>'+
+      '<form id="cliForm" class="form-grid">'+
+        '<div class="f-field full"><label>Nombre</label><input name="name" required maxlength="100" value="'+(isNew?'':esc(c.name))+'"></div>'+
+        '<div class="f-field"><label>Teléfono</label><input name="phone" maxlength="20" placeholder="7000-0000" value="'+(isNew||c.phone==='—'?'':esc(c.phone))+'"></div>'+
+        '<div class="f-field"><label>Correo</label><input name="email" type="email" maxlength="100" placeholder="cliente@correo.com" value="'+(isNew?'':esc(c.email))+'"></div>'+
+        '<div class="f-field full"><label>Dirección</label><input name="address" maxlength="150" value="'+(isNew?'':esc(c.address))+'"></div>'+
+        (isNew ?
           '<div class="f-field full"><label>Primera compra (opcional)</label><select name="item"><option value="">— Sin compra por ahora —</option>'+itemOptions+'</select></div>'+
-          '<div class="f-field"><label>Cantidad</label><input name="qty" type="number" min="1" value="1"></div>'+
-          '<div class="full"><button class="save-btn" type="submit">Guardar cliente</button></div>'+
-        '</form>'
-      );
-      document.getElementById('mClose').addEventListener('click', closeModal);
-      document.getElementById('cliForm').addEventListener('submit', function(e){
-        e.preventDefault();
-        var fd = new FormData(e.target);
-        var newClient = {id:uid('cli'), name:fd.get('name'), phone:fd.get('phone')||'—', purchases:[], total:0};
-        var itemId = fd.get('item');
-        if(itemId){
-          var prod = STATE.inventory.find(function(p){ return p.id===itemId; });
-          var qty = parseInt(fd.get('qty'),10)||1;
-          if(prod){
-            var amount = Math.round(prod.price*qty*100)/100;
-            newClient.purchases.push({item:prod.name, qty:qty, amount:amount, date:todayISO()});
-            newClient.total = amount;
-            STATE.sales.unshift({id:uid('sale'), client:newClient.name, item:prod.name, qty:qty, amount:amount, date:todayISO(), method:'Efectivo', status:'Pagado'});
-            STATE.payments.unshift({id:uid('pay'), client:newClient.name, amount:amount, method:'Efectivo', status:'Pagado', date:todayISO()});
-          }
-        }
-        STATE.clients.unshift(newClient);
-        saveState(); closeModal(); toast('Cliente agregado'); renderAll();
+          '<div class="f-field"><label>Cantidad</label><input name="qty" type="number" min="1" value="1"></div>' : '')+
+        '<div class="full"><button class="save-btn" type="submit">'+(isNew ? 'Guardar cliente' : 'Guardar cambios')+'</button></div>'+
+      '</form>'
+    );
+    document.getElementById('mClose').addEventListener('click', closeModal);
+    document.getElementById('cliForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      act('clientes.php', {
+        action: isNew ? 'create' : 'update', id: isNew ? null : c.id,
+        name: fd.get('name'), phone: fd.get('phone'), email: fd.get('email'), address: fd.get('address'),
+        item: isNew ? fd.get('item') : null, qty: isNew ? (parseInt(fd.get('qty'),10) || 1) : null
+      }, isNew ? 'Cliente agregado' : 'Cliente actualizado').then(function(ok){
+        if(ok){ closeModal(); renderAll(); }
       });
     });
   }
@@ -439,10 +500,32 @@
   function salesTableHTML(list, showAll){
     if(!list.length) return '<tr><td class="empty-note">Todavía no hay ventas registradas.</td></tr>';
     var rows = list.map(function(s){
-      return '<tr><td>'+s.date+'</td><td>'+s.client+'</td><td>'+s.item+' x'+s.qty+'</td><td>'+money(s.amount)+'</td><td>'+s.method+'</td>'+
-        '<td><span class="pill-status '+(s.status==='Pagado'?'pagado':'pendiente')+'">'+s.status+'</span></td></tr>';
+      return '<tr><td>'+s.date+'</td><td>'+esc(s.client)+'</td><td>'+esc(s.items.join(', '))+'</td><td>'+money(s.amount)+'</td><td>'+esc(s.method)+'</td>'+
+        '<td><span class="pill-status '+(s.status==='Pagado'?'pagado':'pendiente')+'">'+esc(s.status)+'</span></td>'+
+        (showAll ? '<td><button class="link-btn" data-invoice="'+s.saleId+'">Factura</button></td>' : '')+'</tr>';
     }).join('');
-    return '<thead><tr><th>Fecha</th><th>Cliente</th><th>Ítem</th><th>Monto</th><th>Método</th><th>Estado</th></tr></thead><tbody>'+rows+'</tbody>';
+    return '<thead><tr><th>Fecha</th><th>Cliente</th><th>Productos</th><th>Monto</th><th>Método</th><th>Estado</th>'+(showAll?'<th></th>':'')+'</tr></thead><tbody>'+rows+'</tbody>';
+  }
+
+  function filteredSales(){
+    var q = norm(document.getElementById('salesSearch').value);
+    var from = document.getElementById('salesFrom').value;
+    var to = document.getElementById('salesTo').value;
+    return groupSales(STATE.sales).filter(function(s){
+      if(from && s.date < from) return false;
+      if(to && s.date > to) return false;
+      return !q || norm(s.client + ' ' + s.items.join(' ')).indexOf(q) !== -1;
+    });
+  }
+
+  function renderSalesTable(){
+    var table = document.getElementById('salesTable');
+    var list = filteredSales();
+    table.innerHTML = list.length || !STATE.sales.length ? salesTableHTML(list, true)
+      : '<tr><td class="empty-note">Ninguna venta coincide con el filtro.</td></tr>';
+    table.querySelectorAll('[data-invoice]').forEach(function(btn){
+      btn.onclick = function(){ openInvoice(btn.getAttribute('data-invoice')); };
+    });
   }
 
   function renderVentas(){
@@ -451,41 +534,116 @@
     var days14 = lastNDaysTotals(STATE.sales, 14);
     var run=0; var cum = days14.map(function(d){ run+=d.value; return {label:d.label, value:Math.round(run*100)/100}; });
     document.getElementById('lineChart2').innerHTML = buildLineChart(cum, 'var(--midnight)');
-    document.getElementById('salesTable').innerHTML = salesTableHTML(STATE.sales, true);
+    renderSalesTable();
+    ['salesSearch','salesFrom','salesTo'].forEach(function(id){
+      document.getElementById(id).oninput = renderSalesTable;
+    });
+    document.querySelector('[data-modal="sale"]').onclick = openSaleModal;
+  }
 
-    var saleModalBtn = document.querySelector('[data-modal="sale"]');
-    saleModalBtn.onclick = function(){
-      var clientOptions = STATE.clients.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
-      var itemOptions = STATE.inventory.map(function(p){ return '<option value="'+p.id+'">'+p.name+' — '+money(p.price)+'</option>'; }).join('');
+  // Venta con uno o varios productos (cada línea = producto + cantidad).
+  function openSaleModal(){
+    if(!STATE.clients.length){ toast('Primero agregá un cliente en la sección Clientes'); return; }
+    var avail = STATE.inventory.filter(function(p){ return p.stock > 0; });
+    if(!avail.length){ toast('No tenés stock. Comprale a un proveedor o ajustá el inventario.'); return; }
+    var clientOptions = STATE.clients.map(function(c){ return '<option value="'+c.id+'">'+esc(c.name)+'</option>'; }).join('');
+    var itemOptions = avail.map(function(p){
+      return '<option value="'+p.id+'">'+esc(p.name)+' — '+money(p.price)+' (stock '+p.stock+')</option>';
+    }).join('');
+    openModal(
+      '<div class="modal-head"><h3>Registrar venta</h3><button class="modal-close" id="mClose">✕</button></div>'+
+      '<form id="saleForm" class="form-grid">'+
+        '<div class="f-field full"><label>Cliente</label><select name="client" required>'+clientOptions+'</select></div>'+
+        '<div class="f-field full"><label>Productos</label><div class="sale-lines" id="saleLines"></div>'+
+          '<button type="button" class="add-line" id="addLine">+ Agregar otro producto</button></div>'+
+        '<div class="f-field"><label>Método</label><select name="method"><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></div>'+
+        '<div class="f-field"><label>Estado</label><select name="status"><option>Pagado</option><option>Pendiente</option></select></div>'+
+        '<div class="full cart-total">Total: <strong id="saleTotal">$0.00</strong></div>'+
+        '<div class="full"><button class="save-btn" type="submit" style="margin-top:0;">Guardar venta</button></div>'+
+      '</form>'
+    );
+    var lines = document.getElementById('saleLines');
+    function priceOf(id){ var p = STATE.inventory.find(function(x){ return x.id === id; }); return p ? p.price : 0; }
+    function recalc(){
+      var total = 0;
+      lines.querySelectorAll('.sale-line').forEach(function(l){
+        total += priceOf(l.querySelector('select').value) * (parseInt(l.querySelector('input').value, 10) || 0);
+      });
+      document.getElementById('saleTotal').textContent = money(total);
+    }
+    function addLine(){
+      var div = document.createElement('div');
+      div.className = 'sale-line';
+      div.innerHTML = '<select>'+itemOptions+'</select><input type="number" min="1" value="1" aria-label="Cantidad"><button type="button" class="cart-rm" title="Quitar">✕</button>';
+      div.querySelector('.cart-rm').onclick = function(){
+        if(lines.children.length > 1){ div.remove(); recalc(); }
+      };
+      div.querySelector('select').onchange = recalc;
+      div.querySelector('input').oninput = recalc;
+      lines.appendChild(div);
+      recalc();
+    }
+    addLine();
+    document.getElementById('addLine').onclick = addLine;
+    document.getElementById('mClose').addEventListener('click', closeModal);
+    document.getElementById('saleForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      var items = [].map.call(lines.querySelectorAll('.sale-line'), function(l){
+        return {id: l.querySelector('select').value, qty: parseInt(l.querySelector('input').value, 10) || 1};
+      });
+      act('ventas.php', {client: fd.get('client'), items: items, method: fd.get('method'), status: fd.get('status')}, 'Venta registrada').then(function(ok){
+        if(ok){ closeModal(); renderAll(); }
+      });
+    });
+  }
+
+  /* ---------------- FACTURA ---------------- */
+  function invoiceHTML(f){
+    var rows = f.items.map(function(it){
+      return '<tr><td>'+esc(it.name)+'</td><td>'+it.qty+'</td><td>'+money(it.price)+'</td><td>'+money(it.subtotal)+'</td></tr>';
+    }).join('');
+    return '<div class="invoice">'+
+      '<div class="inv-head"><div><h4>'+esc(f.business.name)+'</h4>'+
+        '<div class="muted">'+esc(f.business.address || '')+(f.business.phone ? ' · Tel. '+esc(f.business.phone) : '')+'</div></div>'+
+        '<div class="inv-num"><div class="muted">Factura N°</div><b>'+pad(f.number)+'</b><div class="muted">'+f.date+'</div></div></div>'+
+      '<div style="margin-bottom:10px;"><div class="muted">Cliente</div><strong>'+esc(f.client.name)+'</strong>'+
+        (f.client.phone ? ' · '+esc(f.client.phone) : '')+(f.client.address ? '<div class="muted">'+esc(f.client.address)+'</div>' : '')+'</div>'+
+      '<table class="data-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<div class="inv-total"><span>Total</span><span>'+money(f.total)+'</span></div>'+
+      '<div class="muted" style="margin-top:8px;">Pago: '+esc(f.method)+' · '+esc(f.status)+' · Atendió: '+esc(f.servedBy)+' · Venta #'+f.saleId+'</div>'+
+    '</div>';
+  }
+
+  function printInvoice(f){
+    var w = window.open('', '_blank', 'width=720,height=900');
+    if(!w){ toast('Permití las ventanas emergentes para imprimir la factura'); return; }
+    w.document.write('<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Factura N° '+pad(f.number)+'</title><style>'+
+      'body{font-family:Segoe UI,Arial,sans-serif;color:#1C1830;padding:32px;max-width:680px;margin:auto;}'+
+      'h4{font-size:20px;margin:0 0 4px;}.muted{color:#666;font-size:12px;}'+
+      '.inv-head{display:flex;justify-content:space-between;border-bottom:2px dashed #ccc;padding-bottom:12px;margin-bottom:14px;}'+
+      '.inv-num{text-align:right;}.inv-num b{font-size:20px;}'+
+      'table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px;}th,td{text-align:left;padding:8px;border-bottom:1px solid #ddd;}'+
+      'th{font-size:11px;text-transform:uppercase;color:#666;}'+
+      '.inv-total{display:flex;justify-content:space-between;font-weight:700;font-size:18px;margin-top:14px;}'+
+      '</style></head><body>'+invoiceHTML(f)+'</body></html>');
+    w.document.close();
+    w.focus();
+    w.print();
+  }
+
+  function openInvoice(saleId){
+    window.innovaApi('factura.php?venta=' + encodeURIComponent(saleId)).then(function(r){
+      if(!r.ok){ toast(r.data.error || 'No se pudo abrir la factura'); return; }
+      var f = r.data;
       openModal(
-        '<div class="modal-head"><h3>Registrar venta</h3><button class="modal-close" id="mClose">✕</button></div>'+
-        '<form id="saleForm" class="form-grid">'+
-          '<div class="f-field full"><label>Cliente</label><select name="client" required>'+clientOptions+'</select></div>'+
-          '<div class="f-field full"><label>Producto</label><select name="item" required>'+itemOptions+'</select></div>'+
-          '<div class="f-field"><label>Cantidad</label><input name="qty" type="number" min="1" value="1" required></div>'+
-          '<div class="f-field"><label>Método</label><select name="method"><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></div>'+
-          '<div class="f-field full"><label>Estado</label><select name="status"><option>Pagado</option><option>Pendiente</option></select></div>'+
-          '<div class="full"><button class="save-btn" type="submit">Guardar venta</button></div>'+
-        '</form>'
+        '<div class="modal-head"><h3>Factura</h3><button class="modal-close" id="mClose">✕</button></div>'+
+        invoiceHTML(f)+
+        '<button class="save-btn" id="printInvoice">Imprimir</button>'
       );
       document.getElementById('mClose').addEventListener('click', closeModal);
-      document.getElementById('saleForm').addEventListener('submit', function(e){
-        e.preventDefault();
-        var fd = new FormData(e.target);
-        var client = STATE.clients.find(function(c){ return c.id===fd.get('client'); });
-        var prod = STATE.inventory.find(function(p){ return p.id===fd.get('item'); });
-        var qty = parseInt(fd.get('qty'),10)||1;
-        var amount = Math.round(prod.price*qty*100)/100;
-        var date = todayISO();
-        var method = fd.get('method'); var status = fd.get('status');
-        STATE.sales.unshift({id:uid('sale'), client:client.name, item:prod.name, qty:qty, amount:amount, date:date, method:method, status:status});
-        STATE.payments.unshift({id:uid('pay'), client:client.name, amount:amount, method:method, status:status, date:date});
-        client.purchases.unshift({item:prod.name, qty:qty, amount:amount, date:date});
-        client.total = Math.round((client.total+amount)*100)/100;
-        prod.stock = Math.max(0, prod.stock-qty);
-        saveState(); closeModal(); toast('Venta registrada'); renderAll();
-      });
-    };
+      document.getElementById('printInvoice').addEventListener('click', function(){ printInvoice(f); });
+    });
   }
 
   /* ---------------- INGRESOS ---------------- */
@@ -508,7 +666,7 @@
     var list = STATE.payments.filter(function(p){ return paymentFilter==='Todos' || p.status===paymentFilter; });
     if(!list.length) return '<tr><td class="empty-note">No hay pagos en este filtro.</td></tr>';
     var rows = list.map(function(p){
-      return '<tr><td>'+p.date+'</td><td>'+p.client+'</td><td>'+money(p.amount)+'</td><td>'+p.method+'</td>'+
+      return '<tr><td>'+p.date+'</td><td>'+esc(p.client)+'</td><td>'+money(p.amount)+'</td><td>'+esc(p.method)+'</td>'+
         '<td><span class="pill-status '+(p.status==='Pagado'?'pagado':'pendiente')+'">'+p.status+'</span></td></tr>';
     }).join('');
     return '<thead><tr><th>Fecha</th><th>Cliente</th><th>Monto</th><th>Método</th><th>Estado</th></tr></thead><tbody>'+rows+'</tbody>';
@@ -522,27 +680,6 @@
         renderPagos();
       };
     });
-    var btn = document.querySelector('[data-modal="payment"]');
-    btn.onclick = function(){
-      var clientOptions = STATE.clients.map(function(c){ return '<option value="'+c.name+'">'+c.name+'</option>'; }).join('');
-      openModal(
-        '<div class="modal-head"><h3>Registrar pago</h3><button class="modal-close" id="mClose">✕</button></div>'+
-        '<form id="payForm" class="form-grid">'+
-          '<div class="f-field full"><label>Cliente</label><select name="client">'+clientOptions+'</select></div>'+
-          '<div class="f-field"><label>Monto ($)</label><input name="amount" type="number" step="0.01" min="0" required></div>'+
-          '<div class="f-field"><label>Método</label><select name="method"><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></div>'+
-          '<div class="f-field full"><label>Estado</label><select name="status"><option>Pagado</option><option>Pendiente</option></select></div>'+
-          '<div class="full"><button class="save-btn" type="submit">Guardar pago</button></div>'+
-        '</form>'
-      );
-      document.getElementById('mClose').addEventListener('click', closeModal);
-      document.getElementById('payForm').addEventListener('submit', function(e){
-        e.preventDefault();
-        var fd = new FormData(e.target);
-        STATE.payments.unshift({id:uid('pay'), client:fd.get('client'), amount:parseFloat(fd.get('amount'))||0, method:fd.get('method'), status:fd.get('status'), date:todayISO()});
-        saveState(); closeModal(); toast('Pago registrado'); renderPagos();
-      });
-    };
   }
 
   /* ---------------- render dispatcher ---------------- */
@@ -561,13 +698,13 @@
 
   /* ---------------- init ---------------- */
   function boot(){
-    if(!loadAccount()) return;
-    loadState();
     safe(initTheme, 'theme');
-    safe(renderTopbar, 'topbar');
-    safe(initNav, 'nav');
-    safe(initModalBase, 'modalBase');
-    safe(renderResumen, 'resumen');
+    refresh().then(seedIfEmpty).then(function(){
+      safe(renderTopbar, 'topbar');
+      safe(initNav, 'nav');
+      safe(initModalBase, 'modalBase');
+      safe(renderResumen, 'resumen');
+    }).catch(function(err){ console.warn('[InnovaSistem admin] boot', err); });
   }
 
   safe(boot, 'boot');

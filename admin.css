@@ -219,7 +219,7 @@ html[data-theme="dark"] .cart-total{color:var(--beige);}
 .table-wrap{overflow-x:auto;}
 
 .chips{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
-.chip{padding:7px 16px;border-radius:999px;border:1.5px solid var(--line);font-size:.8rem;transition:background .3s,color .3s,border-color .3s;}
+.chip{padding:7px 16px;border-radius:999px;border:1.5px solid var(--glass-border);background:var(--surface);backdrop-filter:blur(12px);color:var(--text);font-size:.8rem;font-weight:600;transition:background .3s,color .3s,border-color .3s;}
 .chip.active{background:var(--dark-green);color:var(--beige);border-color:var(--dark-green);}
 
 /* ---------------- charts ---------------- */
@@ -278,3 +278,50 @@ html[data-theme="dark"] .provider-list-item .pname{color:var(--beige);}
 .toast.show{transform:translateY(0);opacity:1;}
 
 .empty-note{color:var(--text-dim);font-size:.85rem;padding:20px;text-align:center;}
+
+/* ---------------- buscadores y filtros (ventas, clientes) ---------------- */
+.filter-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0 6px;}
+.filter-bar label{display:flex;align-items:center;gap:6px;font-size:.76rem;color:var(--text-dim);font-weight:600;}
+.filter-bar input, .head-search{
+  padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);font-size:.84rem;font-family:inherit;
+}
+.filter-bar input[type=search]{flex:1 1 220px;min-width:0;}
+.head-search{width:min(260px,100%);}
+html[data-theme="dark"] .filter-bar input, html[data-theme="dark"] .head-search{background:#170F35;color:var(--beige);}
+.filter-bar input:focus, .head-search:focus{outline:none;border-color:var(--midnight);}
+
+/* ---------------- acciones en tarjetas y tablas ---------------- */
+.card-actions{display:flex;gap:8px;margin-top:12px;position:relative;z-index:2;}
+.link-btn{font-size:.76rem;font-weight:700;color:var(--midnight);padding:4px 0;}
+html[data-theme="dark"] .link-btn{color:var(--moss-soft);}
+.link-btn.danger{color:var(--rosy-dark);}
+.link-btn:hover{text-decoration:underline;}
+.danger-btn{margin-top:16px;margin-left:8px;padding:11px 20px;border-radius:999px;background:rgba(232,95,168,.14);color:var(--rosy-dark);font-weight:700;font-size:.85rem;}
+.f-field textarea{padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);font-size:.88rem;font-family:inherit;}
+
+/* ---------------- venta con varios productos ---------------- */
+.sale-lines{display:flex;flex-direction:column;gap:8px;}
+.sale-line{display:grid;grid-template-columns:1fr 70px 32px;gap:8px;align-items:center;}
+.sale-line select, .sale-line input{padding:9px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);font-size:.84rem;font-family:inherit;min-width:0;}
+html[data-theme="dark"] .sale-line select, html[data-theme="dark"] .sale-line input{background:#170F35;color:var(--beige);}
+.sale-line .cart-rm{margin:0;font-size:1rem;}
+.add-line{align-self:flex-start;font-size:.8rem;font-weight:700;color:var(--midnight);padding:6px 0;}
+html[data-theme="dark"] .add-line{color:var(--moss-soft);}
+
+/* ---------------- factura ---------------- */
+.invoice{font-size:.86rem;color:var(--text);}
+.invoice .inv-head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:12px;border-bottom:2px dashed var(--line);margin-bottom:12px;}
+.invoice .inv-head h4{font-size:1.05rem;}
+.invoice .inv-num{text-align:right;}
+.invoice .inv-num b{font-family:var(--ff-serif);font-size:1.1rem;color:var(--midnight);}
+html[data-theme="dark"] .invoice .inv-num b{color:var(--moss-soft);}
+.invoice .muted{color:var(--text-dim);font-size:.78rem;}
+.invoice .inv-total{display:flex;justify-content:space-between;font-weight:700;font-size:1rem;margin-top:12px;}
+@media (max-width:560px){ .form-grid{grid-template-columns:1fr;} .kpi-row{grid-template-columns:1fr;} }
+
+/* dock en celular: con 9 secciones no entra, así que se desliza de costado */
+@media (max-width:860px){
+  .dock{max-width:calc(100vw - 24px);overflow-x:auto;scrollbar-width:none;}
+  .dock::-webkit-scrollbar{display:none;}
+  .dock-btn, .dock-sep{flex:none;}
+}

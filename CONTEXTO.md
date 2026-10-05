@@ -36,23 +36,73 @@ preguntas ni deshacer trabajo.
   de ejemplo (ver punto 6).
 - `imagenes/` — assets reales que el usuario proveyó (ver abajo).
 
-No hay backend. Todo vive en `localStorage`:
-- `innova_accounts` — **array** con TODOS los negocios registrados en el
-  navegador: `{id, businessName, ownerName, email, password, type,
-  createdAt}`. Es la "base de datos" de clientes de la plataforma.
-- `innova_account` — snapshot del negocio con la sesión ACTIVA en este
-  momento (uno de los objetos de `innova_accounts`, copiado ahí al hacer
-  login). `admin.js` lo lee para saber quién entró.
-- `innova_business_<id>` — el estado completo de un negocio (inventario,
-  proveedores agregados, clientes, ventas, pagos), donde `<id>` es el
-  `account.id` generado al registrarse (NO el tipo — ver punto 8, antes era
-  por tipo y chocaban negocios del mismo rubro).
-- `innova_orders` — array global de pedidos a proveedores hechos por
-  cualquier negocio (lo lee `superadmin.html`). Ver punto 8.
-- `innova_admin_session` — `'1'` cuando hay una sesión de administrador de
-  plataforma activa (gate de `superadmin.html`).
-- `innova_theme` — tema claro/oscuro (compartido por `admin.html` y
-  `superadmin.html`).
+**Backend PHP + MySQL (desde 2026-10-05).** Ya NO se usa `localStorage`
+para los datos (solo para `innova_theme`, el tema claro/oscuro). Todo vive
+en la base MySQL `sistema_multinegocios` de XAMPP:
+- `database/sistema_multinegocios.sql` — el SQL ORIGINAL del usuario (tarea
+  de clase): 11 tablas (negocios, roles, usuarios, categorias, proveedores,
+  productos, clientes, ventas, detalle_venta, facturas,
+  inventario_movimientos) + datos de ejemplo (Pupusería Doña Chayo, Taller
+  Don Natalio, Clínica El Pirilin; usuarios `mchayo`, `ngomez`, `dpirilin`…
+  con contraseña `1234`). **No modificar ese archivo.**
+- `database/innovasistem_extra.sql` — lo que la web agrega encima, sin
+  borrar nada y re-ejecutable: `negocios.tipo` (id del oficio) +
+  `fecha_registro`, `usuarios.usuario_login` hasta 100 (guarda el correo) y
+  `contrasena` 255 (password_hash), `proveedores.descripcion` + `activo`
+  (quitar proveedor = activo 0, no se borra), `clientes.id_negocio`,
+  `ventas.metodo_pago` + `estado`, y tablas nuevas `pagos`, `pedidos`,
+  `detalle_pedido`.
+- `api/*.php` — API JSON con PDO y sesiones PHP: `conexion.php` (config,
+  `ADMIN_EMAIL`, helpers), `registro.php`, `login.php` (acepta correo o
+  usuario; las contraseñas en texto plano del .sql se aceptan una vez y se
+  re-guardan con password_hash), `admin_login.php` (solo valida el correo,
+  igual que antes), `logout.php`, `negocio.php` (GET = estado del panel en
+  el mismo formato que usaba admin.js; POST seed = inventario inicial del
+  oficio), `proveedores.php`, `comprar.php` (pedido + ENTRADA de
+  inventario), `clientes.php`, `ventas.php` (+ `funciones_venta.php`:
+  venta + detalle + factura + pago + SALIDA + stock), `pagos.php`,
+  `superadmin.php` (GET todo / POST delete negocio en cascada).
+- `api.js` — helper `window.innovaApi(file, body?)` que usan login.js,
+  admin.js y superadmin.js. admin.js mantiene `STATE` con la misma forma,
+  pero lo trae de `negocio.php` (`refresh()`) y cada cambio pasa por
+  `act(file, body, msg)`.
+- `data.js` sigue siendo el catálogo (oficios/categorías/proveedores
+  sugeridos/productos de ejemplo) del lado del navegador; `ALIASES` mapea
+  los tipos del .sql ('Comida', 'Taller Mecanico', 'Salud').
+- El super-admin ahora ve TODOS los negocios de la base (ya no depende del
+  navegador). Borrar un negocio borra también ventas/pedidos de otros
+  negocios que apunten a sus productos/usuarios/clientes (pasa con los datos
+  de ejemplo del .sql, que se cruzan entre negocios).
+- **Funciones del panel (2026-10-05, pedidas por el usuario):**
+  - Clientes: crear (con primera compra opcional), editar (nombre, tel,
+    correo, dirección), eliminar y buscador. `api/clientes.php`
+    (`action` create/update/delete). Eliminar = DELETE si no tiene ventas
+    ni pagos; si tiene, `clientes.activo = 0`.
+  - Productos (solo dueño): editar nombre/precio/stock (cambiar el stock a
+    mano registra ENTRADA/SALIDA en inventario_movimientos) y eliminar (o
+    `productos.activo = 0` si ya se vendió). `api/productos.php`. **NO hay
+    botón "Nuevo producto"**: el usuario lo pidió quitar.
+  - Venta con varios productos (una fila de detalle_venta por producto),
+    valida stock suficiente. `api/ventas.php` + `funciones_venta.php`.
+  - Factura de cada venta (modal + imprimir en ventana nueva).
+    `api/factura.php?venta=ID`.
+  - Buscador y filtro por fechas en Ventas.
+  - Pagos: **se registran solos con cada venta** (no hay "Nuevo pago"; el
+    usuario lo pidió quitar y se borró `api/pagos.php`).
+  - **Se quitaron a pedido del usuario** (no volver a agregar sin que lo
+    pida): la vista Reportes, la vista "Mi negocio" (datos del negocio +
+    usuarios/roles; se borró `api/usuarios.php` y la acción update de
+    `negocio.php`), el botón "Nuevo producto" y el botón "Nuevo pago".
+  - `database/reiniciar_en_cero.sql`: deja ventas, facturas, pagos,
+    pedidos, movimientos y stock en 0, conservando negocios, usuarios,
+    clientes, productos y proveedores. El usuario pidió arrancar así; la
+    base quedó en cero el 2026-10-05.
+  - El usuario planea después una "contraparte": la vista del CLIENTE que
+    compra en un negocio y ve sus compras. `clientes.correo` existe para eso.
+- **Vercel no corre PHP**: la versión de Vercel quedó con localStorage
+  (commit 67b3289). Si se sube esta versión a `main`, el login/panel en
+  Vercel deja de funcionar — para tenerlo en línea hace falta un hosting con
+  PHP + MySQL.
 
 ## Decisiones de diseño ya tomadas (no revertir sin que el usuario lo pida)
 
@@ -325,17 +375,17 @@ No hay backend. Todo vive en `localStorage`:
 
 - Vercel: https://innovasistem.vercel.app (se publica desde `main` de GitHub).
 
-## Cómo previsualizar
+## Cómo correrlo (XAMPP)
 
-No hay servidor de por sí — es estático. Levantar cualquier server simple
-desde la carpeta `innovasistem/`:
-
-```bash
-python -m http.server 8765
-```
-
-y abrir `http://localhost:8765`. `admin.html` redirige a `login.html` si no
-hay `innova_account` en localStorage.
+1. Abrir el XAMPP Control Panel y encender **Apache** y **MySQL**.
+2. La primera vez, en phpMyAdmin importar `database/sistema_multinegocios.sql`
+   y después `database/innovasistem_extra.sql` (en esta PC ya están).
+3. `C:\xampp\htdocs\innovasistem` es un *junction* que apunta a esta
+   carpeta del repo, así que no hay que copiar archivos: abrir
+   `http://localhost/innovasistem`.
+4. Para la vista previa de Claude se usa el servidor embebido de PHP
+   (`C:/xampp/php/php.exe -S localhost:5601`), configurado en
+   `Proyecto fina/.claude/launch.json`.
 
 ## Pendientes / posibles próximos pasos
 

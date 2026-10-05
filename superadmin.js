@@ -7,40 +7,25 @@
   function money(n){ return '$' + (Math.round(n*100)/100).toFixed(2); }
   function todayISO(){ return new Date().toISOString().slice(0,10); }
 
-  /* ---------------- guard ---------------- */
-  function guard(){
-    if(localStorage.getItem('innova_admin_session') !== '1'){
-      window.location.href = 'login.html';
-      return false;
-    }
-    return true;
-  }
+  /* ---------------- datos desde la base (api/superadmin.php) ---------------- */
+  var DATA = {businesses:[], sales:[], orders:[]};
 
-  /* ---------------- data access ---------------- */
-  function getAccounts(){
-    var raw = localStorage.getItem('innova_accounts');
-    return raw ? JSON.parse(raw) : [];
+  function goLogin(){ window.location.href = 'login.html'; }
+
+  function refresh(){
+    return window.innovaApi('superadmin.php').then(function(r){
+      if(r.status === 401){ goLogin(); return Promise.reject('sin sesión'); }
+      if(!r.ok){ toast(r.data.error || 'No se pudieron cargar los datos'); return Promise.reject(r.data.error); }
+      DATA = r.data;
+    });
   }
-  function saveAccounts(list){
-    localStorage.setItem('innova_accounts', JSON.stringify(list));
-  }
-  function getOrders(){
-    var raw = localStorage.getItem('innova_orders');
-    return raw ? JSON.parse(raw) : [];
-  }
-  function saveOrders(list){
-    localStorage.setItem('innova_orders', JSON.stringify(list));
-  }
-  function deleteBusiness(accId){
-    var accounts = getAccounts().filter(function(a){ return a.id !== accId; });
-    saveAccounts(accounts);
-    localStorage.removeItem('innova_business_' + accId);
-    var orders = getOrders().filter(function(o){ return o.businessId !== accId; });
-    saveOrders(orders);
-  }
-  function getBusinessState(acc){
-    var raw = localStorage.getItem('innova_business_' + (acc.id || acc.type));
-    return raw ? JSON.parse(raw) : null;
+  function getAccounts(){ return DATA.businesses; }
+  function getOrders(){ return DATA.orders; }
+  function deleteBusiness(id){
+    return window.innovaApi('superadmin.php', {action:'delete', id:id}).then(function(r){
+      if(!r.ok){ toast(r.data.error || 'No se pudo eliminar'); return false; }
+      return refresh().then(function(){ return true; });
+    });
   }
   function typeLabel(type){
     var t = window.INNOVA_DATA && window.INNOVA_DATA.getType(type);
@@ -86,8 +71,7 @@
       });
     });
     function logout(){
-      localStorage.removeItem('innova_admin_session');
-      window.location.href = 'login.html';
+      window.innovaApi('logout.php', {}).then(goLogin);
     }
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('logoutBtn2').addEventListener('click', logout);
@@ -162,13 +146,7 @@
   /* ---------------- aggregation helpers ---------------- */
   function allBusinessData(){
     return getAccounts().map(function(acc){
-      var st = getBusinessState(acc);
-      return {
-        account: acc,
-        state: st,
-        sales: (st && st.sales) || [],
-        revenue: (st && st.sales ? st.sales.reduce(function(a,s){ return a+s.amount; }, 0) : 0)
-      };
+      return {account: acc, revenue: acc.revenue};
     });
   }
 
@@ -188,10 +166,7 @@
       kpi('Pedidos en camino', activeOrders, activeOrders>0?'down':null, 'Seguimiento activo')
     ].join('');
 
-    var allSales = [];
-    bizData.forEach(function(b){
-      b.sales.forEach(function(s){ allSales.push(Object.assign({}, s, {businessName: b.account.businessName})); });
-    });
+    var allSales = DATA.sales.slice();
 
     var days7 = lastNDaysTotals(allSales, 7);
     document.getElementById('barChart').innerHTML = buildBarChart(days7, 'var(--midnight)');
@@ -242,10 +217,12 @@
         e.stopPropagation();
         var id = btn.getAttribute('data-id');
         var name = btn.getAttribute('data-name');
-        if(!confirm('¿Eliminar "'+name+'" de la plataforma? Esta acción no se puede deshacer.')) return;
-        deleteBusiness(id);
-        toast('Negocio eliminado');
-        renderClientes();
+        if(!confirm('¿Eliminar "'+name+'" de la plataforma? Se borran también sus productos, ventas, clientes y pedidos. Esta acción no se puede deshacer.')) return;
+        deleteBusiness(id).then(function(ok){
+          if(!ok) return;
+          toast('Negocio eliminado');
+          renderClientes();
+        });
       });
     });
   }
@@ -259,7 +236,7 @@
     } else {
       var today = todayISO();
       var rows = orders.map(function(o){
-        var itemsTxt = o.items.map(function(it){ return it.name + ' x' + it.qty; }).join(', ');
+        var itemsTxt = o.itemsText;
         var delivered = o.arrivalDate <= today;
         var daysLeft = delivered ? 0 : Math.ceil((new Date(o.arrivalDate) - new Date(today)) / 86400000);
         var statusTxt = delivered ? 'Entregado' : 'En camino';
@@ -285,10 +262,11 @@
 
   /* ---------------- init ---------------- */
   function boot(){
-    if(!guard()) return;
     safe(initTheme, 'theme');
-    safe(initNav, 'nav');
-    safe(renderResumen, 'resumen');
+    refresh().then(function(){
+      safe(initNav, 'nav');
+      safe(renderResumen, 'resumen');
+    }).catch(function(err){ console.warn('[InnovaSistem superadmin] boot', err); });
   }
 
   safe(boot, 'boot');

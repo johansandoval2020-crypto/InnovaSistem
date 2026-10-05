@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=20260911b">
+<link rel="stylesheet" href="admin.css?v=20261006d">
 </head>
 <body>
 
@@ -78,7 +78,12 @@
       <div class="panel-box chart-box"><h2>Tendencia acumulada</h2><p class="sub">Ingreso acumulado</p><div id="lineChart2"></div></div>
     </div>
     <div class="panel-box">
-      <h2>Historial de ventas</h2><p class="sub">Todas las ventas registradas</p>
+      <h2>Historial de ventas</h2><p class="sub">Buscá por cliente o producto y filtrá por fecha. Tocá “Factura” para verla o imprimirla.</p>
+      <div class="filter-bar">
+        <input type="search" id="salesSearch" placeholder="Buscar cliente o producto…">
+        <label>Desde <input type="date" id="salesFrom"></label>
+        <label>Hasta <input type="date" id="salesTo"></label>
+      </div>
       <div class="table-wrap"><table class="data-table" id="salesTable"></table></div>
     </div>
   </section>
@@ -95,6 +100,7 @@
   <section class="view" id="view-clientes">
     <div class="sec-head">
       <div><h1>Clientes</h1><p>Facturación e historial de compras por cliente.</p></div>
+      <input type="search" class="head-search" id="clientSearch" placeholder="Buscar cliente…">
     </div>
     <div class="card-row" id="clientsGrid"></div>
   </section>
@@ -109,8 +115,7 @@
   <!-- PAGOS -->
   <section class="view" id="view-pagos">
     <div class="sec-head">
-      <div><h1>Pagos</h1><p>Qué está pagado y qué está pendiente.</p></div>
-      <button class="add-btn" data-modal="payment"><span class="plus">+</span> Nuevo pago</button>
+      <div><h1>Pagos</h1><p>Se registran solos con cada venta: qué está pagado y qué está pendiente.</p></div>
     </div>
     <div class="chips" id="paymentChips">
       <button class="chip active" data-filter="Todos">Todos</button>
@@ -131,7 +136,8 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="data.js?v=20261005a"></script>
-<script defer src="admin.js?v=20261005a"></script>
+<script src="data.js?v=20261006a"></script>
+<script src="api.js?v=20261006a"></script>
+<script defer src="admin.js?v=20261006c"></script>
 </body>
 </html>
