@@ -37,7 +37,7 @@
         sub.textContent = 'Solo para el equipo de InnovaSistem.';
       } else {
         heading.textContent = isLogin ? 'Bienvenido de nuevo' : 'Creá tu negocio';
-        sub.textContent = isLogin ? 'Entrá a tu panel y seguí el control de tu negocio.' : 'Elegí tu rubro y armamos tu panel al instante.';
+        sub.textContent = isLogin ? 'Entrá a tu panel y seguí el control de tu negocio.' : 'Elegí tu oficio y armamos tu panel al instante.';
       }
       msg.classList.remove('show');
     }
@@ -55,14 +55,100 @@
     window.__innovaShowLoginTab = show;
   }
 
-  function initTypeSelect(){
-    var cards = document.querySelectorAll('.type-card');
-    cards.forEach(function(card){
-      card.addEventListener('click', function(){
-        cards.forEach(function(c){ c.classList.remove('selected'); });
-        card.classList.add('selected');
-      });
+  /* ---------------- buscador de oficios ----------------
+     Filtra window.INNOVA_DATA.businessTypes (data.js) agrupados por
+     categoría. Lo elegido va al input oculto #typeValue; si el oficio no
+     está en la lista se guarda como 'otro:<texto>'. */
+  function normalize(str){
+    return str.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+  function escapeHtml(str){
+    return str.replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
+  }
+
+  function initTypeSelect(){
+    var search = document.getElementById('typeSearch');
+    var value = document.getElementById('typeValue');
+    var list = document.getElementById('typeList');
+    var types = window.INNOVA_DATA.businessTypes;
+    var activeIdx = -1;
+
+    function options(){ return list.querySelectorAll('.type-opt'); }
+
+    function render(){
+      var q = normalize(search.value.trim());
+      var html = '';
+      var lastCat = null;
+      var count = 0;
+      types.forEach(function(t){
+        if(q && normalize(t.label).indexOf(q) === -1 && normalize(t.categoryLabel).indexOf(q) === -1) return;
+        if(t.category !== lastCat){
+          html += '<div class="type-group">'+t.categoryLabel+'</div>';
+          lastCat = t.category;
+        }
+        html += '<div class="type-opt" role="option" data-id="'+t.id+'" data-label="'+escapeHtml(t.label)+'">'+t.label+'</div>';
+        count++;
+      });
+      var typed = search.value.trim();
+      if(typed){
+        html += '<div class="type-group">¿No está tu oficio?</div>'+
+          '<div class="type-opt type-other" role="option" data-id="otro:'+escapeHtml(typed)+'" data-label="'+escapeHtml(typed)+'">Usar “'+escapeHtml(typed)+'” como mi tipo de negocio</div>';
+      }
+      if(!count && !typed) html = '<div class="type-empty">No hay resultados</div>';
+      list.innerHTML = html;
+      activeIdx = -1;
+    }
+
+    function open(){ render(); list.hidden = false; search.setAttribute('aria-expanded','true'); }
+    function close(){ list.hidden = true; search.setAttribute('aria-expanded','false'); }
+
+    function pick(opt){
+      value.value = opt.getAttribute('data-id');
+      search.value = opt.getAttribute('data-label');
+      search.classList.add('picked');
+      close();
+    }
+
+    function highlight(i){
+      var opts = options();
+      if(!opts.length) return;
+      activeIdx = (i + opts.length) % opts.length;
+      opts.forEach(function(o, j){ o.classList.toggle('active', j === activeIdx); });
+      opts[activeIdx].scrollIntoView({block:'nearest'});
+    }
+
+    search.addEventListener('focus', open);
+    search.addEventListener('input', function(){
+      value.value = '';
+      search.classList.remove('picked');
+      open();
+    });
+    search.addEventListener('keydown', function(e){
+      if(list.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')){ open(); }
+      if(e.key === 'ArrowDown'){ e.preventDefault(); highlight(activeIdx + 1); }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); highlight(activeIdx - 1); }
+      else if(e.key === 'Enter' && !list.hidden){
+        var opts = options();
+        if(activeIdx >= 0 && opts[activeIdx]){ e.preventDefault(); pick(opts[activeIdx]); }
+      }
+      else if(e.key === 'Escape'){ close(); }
+    });
+    // mousedown (no click) para elegir antes de que el input pierda el foco
+    list.addEventListener('mousedown', function(e){
+      var opt = e.target.closest('.type-opt');
+      if(!opt) return;
+      e.preventDefault();
+      pick(opt);
+    });
+    search.addEventListener('blur', close);
+  }
+
+  function resetTypeSelect(){
+    document.getElementById('typeSearch').value = '';
+    document.getElementById('typeSearch').classList.remove('picked');
+    document.getElementById('typeValue').value = '';
   }
 
   function showMsg(text, kind){
@@ -79,9 +165,10 @@
     panelRegister.addEventListener('submit', function(e){
       e.preventDefault();
       var fd = new FormData(panelRegister);
-      var selected = document.querySelector('.type-card.selected');
-      if(!selected){
-        showMsg('Elegí qué tipo de negocio es antes de continuar.', 'err');
+      var type = fd.get('type');
+      if(!type){
+        showMsg('Buscá y elegí qué tipo de negocio es antes de continuar.', 'err');
+        document.getElementById('typeSearch').focus();
         return;
       }
       var email = fd.get('email').trim().toLowerCase();
@@ -96,13 +183,13 @@
         ownerName: fd.get('ownerName'),
         email: fd.get('email'),
         password: fd.get('password'),
-        type: selected.getAttribute('data-type'),
+        type: type,
         createdAt: new Date().toISOString()
       };
       accounts.push(account);
       saveAccounts(accounts);
       panelRegister.reset();
-      document.querySelectorAll('.type-card').forEach(function(c){ c.classList.remove('selected'); });
+      resetTypeSelect();
       window.__innovaShowLoginTab('login');
       showMsg('¡Cuenta creada! Iniciá sesión con tu correo y contraseña para entrar a tu panel.', 'ok');
     });

@@ -213,7 +213,7 @@
       var rows = bizData.map(function(b){
         return '<tr><td>'+b.account.businessName+'</td><td>'+(b.account.ownerName||'—')+'</td><td>'+typeLabel(b.account.type)+'</td><td>'+money(b.revenue)+'</td></tr>';
       }).join('');
-      html = '<thead><tr><th>Negocio</th><th>Dueño</th><th>Rubro</th><th>Ingresos generados</th></tr></thead><tbody>'+rows+'</tbody>';
+      html = '<thead><tr><th>Negocio</th><th>Dueño</th><th>Oficio</th><th>Ingresos generados</th></tr></thead><tbody>'+rows+'</tbody>';
     }
     document.getElementById('revenueTable').innerHTML = html;
   }
@@ -228,7 +228,7 @@
           'style="position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;background:rgba(232,95,168,.14);color:#E85FA8;font-size:.85rem;line-height:1;cursor:pointer;">✕</button>'+
         '<div class="row1"><div style="display:flex;align-items:center;gap:10px;"><div class="avatar">'+initials+'</div>'+
         '<div><div class="name" style="margin-bottom:0;">'+acc.businessName+'</div><div class="meta" style="margin-top:2px;"><span>'+(acc.ownerName||'—')+'</span></div></div></div></div>'+
-        '<div class="meta" style="margin-top:12px;"><span>Rubro</span><span class="price">'+typeLabel(acc.type)+'</span></div>'+
+        '<div class="meta" style="margin-top:12px;"><span>Oficio</span><span class="price">'+typeLabel(acc.type)+'</span></div>'+
         '<div class="meta" style="margin-top:6px;"><span>Correo</span><span>'+acc.email+'</span></div>'+
         '<div class="meta" style="margin-top:6px;"><span>Registrado</span><span>'+(acc.createdAt||'').slice(0,10)+'</span></div>'+
       '</div>';

@@ -22,7 +22,7 @@
   }
 
   function seedState(){
-    var products = window.INNOVA_DATA.products[TYPE].map(function(p,i){
+    var products = window.INNOVA_DATA.productsFor(TYPE).map(function(p,i){
       return {id:'inv-'+i, name:p.name, price:p.price, stock:0};
     });
     return {
@@ -71,7 +71,7 @@
   function renderTopbar(){
     var typeInfo = window.INNOVA_DATA.getType(TYPE);
     document.getElementById('bizName').textContent = STATE.name || 'Mi negocio';
-    document.getElementById('bizTypeBadge').textContent = (typeInfo.icon + ' ' + typeInfo.label);
+    document.getElementById('bizTypeBadge').textContent = typeInfo.label;
   }
 
   /* ---------------- theme ---------------- */
@@ -267,7 +267,7 @@
 
     document.getElementById('addProviderTile').addEventListener('click', function(e){
       e.stopPropagation();
-      var directory = window.INNOVA_DATA.providers[TYPE];
+      var directory = window.INNOVA_DATA.providersFor(TYPE);
       var items = directory.map(function(p){
         var already = STATE.providersAdded.some(function(a){ return a.name === p.name; });
         return '<div class="provider-list-item">'+

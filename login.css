@@ -92,16 +92,28 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;}
 .field input:focus{outline:none;border-color:var(--midnight);box-shadow:0 0 0 3px rgba(74,63,145,.15);}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 
-.type-select{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.type-card{
-  border:1.5px solid rgba(34,26,61,.15);border-radius:var(--radius-sm);padding:12px 8px;text-align:center;
-  display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .3s var(--ease), border-color .3s, background .3s;
+.type-combo{position:relative;}
+.type-combo input[type=text]{
+  width:100%;padding:11px 13px;border-radius:var(--radius-sm);border:1.5px solid rgba(34,26,61,.15);
+  background:var(--paper);font-size:.9rem;color:var(--ink);transition:border-color .3s, box-shadow .3s;
 }
-.type-card .em{width:22px;height:22px;color:var(--dark-green);}
-.type-card .em svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;}
-.type-card span{font-size:.72rem;font-weight:600;color:var(--dark-green);}
-.type-card:hover{transform:translateY(-3px);}
-.type-card.selected{border-color:var(--midnight);background:rgba(74,63,145,.08);}
+.type-combo input[type=text]:focus{outline:none;border-color:var(--midnight);box-shadow:0 0 0 3px rgba(74,63,145,.15);}
+.type-combo input.picked{border-color:var(--midnight);background:rgba(74,63,145,.06);font-weight:600;}
+.type-list{
+  position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;
+  max-height:260px;overflow-y:auto;overscroll-behavior:contain;
+  background:var(--paper);border:1.5px solid rgba(34,26,61,.12);border-radius:var(--radius-sm);
+  box-shadow:0 18px 40px -16px rgba(34,26,61,.45);padding:6px;
+}
+.type-list[hidden]{display:none;}
+.type-group{
+  padding:10px 10px 4px;font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;
+  font-weight:700;color:var(--midnight);
+}
+.type-opt{padding:8px 10px;border-radius:9px;font-size:.86rem;color:var(--ink);cursor:pointer;}
+.type-opt:hover, .type-opt.active{background:rgba(74,63,145,.1);}
+.type-opt.type-other{font-style:italic;color:var(--midnight);}
+.type-empty{padding:12px 10px;font-size:.84rem;color:rgba(28,24,48,.6);}
 
 .submit-btn{
   margin-top:6px;padding:12px;border-radius:11px;background:var(--dark-green);color:var(--beige);

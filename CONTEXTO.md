@@ -166,15 +166,37 @@ No hay backend. Todo vive en `localStorage`:
      siempre es el inventario existente (interpretación: "el proveedor surte
      los productos que ya tenemos en inventario").
    - Ver `openProviderCatalog()` en `admin.js`.
-5. **Rubros y su vocabulario** (no mezclar entre tipos):
-   - Clínica → insumos, proveedores médicos (IMED, Dipromequi, DINVER, RIM,
-     Mundo Médico Químico, Medical Systems El Salvador), clientes = pacientes.
-   - Pupusería → ingredientes, proveedores de alimentos (Lácteos Esmeralda,
-     Agrosalva, Sabor Amigo, MOLSAL), clientes = comensales.
-   - Taller → repuestos, proveedores automotrices (Econoparts, Súper
-     Repuestos, Impressa Repuestos, ROMAN AUTOMOTRIZ, INCAPRO), clientes =
-     clientes.
-   - Todo esto vive en `data.js` (`PRODUCTS`, `PROVIDERS`, `BUSINESS_TYPES`).
+5. **Oficios, categorías y proveedores (2026-10-05)** — ya NO hay solo 3
+   rubros. El usuario pidió quitar las 3 tarjetas Clínica/Pupusería/Taller
+   del registro y poder elegir "todos los trabajos del mundo".
+   - `data.js` tiene `CATEGORIES` (30: salud, farmacia, odontologia, optica,
+     laboratorio, comida, panaderia, cafeteria, carnes, abarrotes, belleza,
+     automotriz, motos, transporte, construccion, electricidad, carpinteria,
+     vidrio, moda, tecnologia, educacion, papeleria, agro, mascotas,
+     limpieza, eventos, hoteleria, fitness, servicios, general) y
+     `OCCUPATIONS` (~286 oficios `[id, nombre, categoría]`).
+   - La CATEGORÍA define vocabulario (`unit`/`unitPlural`/`clientNoun`),
+     productos del inventario y directorio de proveedores. Un oficio hereda
+     todo de su categoría (barbería y salón ven los mismos proveedores).
+   - Los proveedores son **empresas reales de El Salvador** investigadas en
+     la web (~135 únicos). El usuario pidió "todos los del mundo"; se acordó
+     limitar a El Salvador + grandes que venden en el país, y **solo
+     empresas cuya existencia se confirmó** (no inventar nombres). Los
+     productos y precios SÍ son de ejemplo.
+   - Ids viejos `clinica`/`pupuseria`/`taller` se mantienen como oficios
+     (categorías salud/comida/automotriz) para no romper cuentas existentes.
+   - "Otro": el registro permite escribir un oficio que no está; se guarda
+     como `type:'otro:<texto>'` y usa la categoría `general`.
+   - API: `INNOVA_DATA.getType(id)`, `productsFor(id)`, `providersFor(id)`,
+     `businessTypes`, `categories`. Ya no existen `products[TYPE]`,
+     `providers[TYPE]`, `buildClients`, `buildSales` ni los iconos emoji.
+   - Registro (`login.html`/`login.js`): buscador con lista agrupada por
+     categoría (`#typeSearch` + oculto `#typeValue`, `initTypeSelect()`);
+     `login.html` ahora carga `data.js`.
+   - Landing: "Tres rubros" → "Cualquier oficio…" en `sectores.html` (las 3
+     tarjetas ahora son Salud y belleza / Comida y comercio / Oficios y
+     servicios), footer y textos dicen "oficio" en vez de "rubro", y el
+     stat del hero dice 135 proveedores aliados.
 6. **Panel arranca en cero (2026-09-09)** — `seedState()` en `admin.js` ya no
    llama a `buildClients`/`buildSales`: un negocio nuevo arranca con
    `clients:[]`, `sales:[]`, `payments:[]` y el inventario con `stock:0` en
@@ -255,8 +277,8 @@ No hay backend. Todo vive en `localStorage`:
      limitación conocida de la arquitectura, no un bug.
 
 9. **Hero simplificado (2026-09-11)** — el hero de `index.html` ya solo
-   muestra UN dato destacado: `<div class="stat"><b data-count="18">0</b>
-   <span>Tenemos 18 proveedores aliados</span></div>` dentro de
+   muestra UN dato destacado: `<div class="stat"><b data-count="135">0</b>
+   <span>Tenemos 135 proveedores aliados</span></div>` dentro de
    `.stats.stats-single` (grid de 1 columna). Los otros tres contadores que
    había antes (rubros listos, clientes por negocio, % en tu control) se
    eliminaron a pedido del usuario — no volver a agregarlos sin que lo pida.
@@ -287,6 +309,21 @@ No hay backend. Todo vive en `localStorage`:
     la herramienta de texto de Drive) — hay una subcarpeta "imagenes" vacía
     esperando que el usuario las arrastre manualmente si quiere el respaldo
     completo.
+
+13. **Cambios del 2026-10-05**:
+    - Arreglos móviles: en <=640px el nav muestra solo logo + burger (los
+      botones viven en `#mobileMenu`), h1 del hero más chico, y `initReveal`
+      en `main.js` revela al instante lo que ya está en pantalla (en algunos
+      celulares el hero quedaba invisible esperando al IntersectionObserver).
+    - La píldora del nav y el `#mobileMenu` pasaron de claros a vidrio
+      oscuro (`--glass-dark`), texto claro, botones violeta (`--moss`); el
+      logo lleva un aro violeta. El `.btn-outline` del nav tiene override.
+    - Se quitó el reloj "HORA LOCAL" del hero (HTML, CSS y `initClock`).
+    - Al cambiar CSS/JS, subir el `?v=` en los HTML: los celulares cachean.
+
+## Deploy
+
+- Vercel: https://innovasistem.vercel.app (se publica desde `main` de GitHub).
 
 ## Cómo previsualizar
 

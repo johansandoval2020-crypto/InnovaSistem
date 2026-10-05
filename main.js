@@ -47,7 +47,16 @@
         }
       });
     }, {threshold:0.05, rootMargin:'0px 0px -40px 0px'});
-    items.forEach(function(el){ io.observe(el); });
+    items.forEach(function(el){
+      // reveal what's already on screen right away (IO can miss it on some phones)
+      var r = el.getBoundingClientRect();
+      if(r.top < window.innerHeight && r.bottom > 0){
+        el.classList.add('is-visible');
+        seen.add(el);
+      } else {
+        io.observe(el);
+      }
+    });
 
     // 6s safety net: reveal anything IO missed (hidden iframes, timing races)
     setTimeout(function(){
@@ -87,18 +96,6 @@
     }
   }
 
-  function initClock(){
-    var el = document.getElementById('clockTime');
-    if(!el) return;
-    function tick(){
-      var d = new Date();
-      var hh = String(d.getHours()).padStart(2,'0');
-      var mm = String(d.getMinutes()).padStart(2,'0');
-      el.textContent = hh + ':' + mm;
-    }
-    tick();
-    setInterval(tick, 15000);
-  }
 
   function initParallaxLeaves(){
     var leaves = document.querySelectorAll('.hero-leaf');
@@ -133,7 +130,6 @@
   safe(initNav, 'nav');
   safe(initReveal, 'reveal');
   safe(initCounters, 'counters');
-  safe(initClock, 'clock');
   safe(initParallaxLeaves, 'parallax');
   safe(initSmoothAnchors, 'anchors');
 })();
