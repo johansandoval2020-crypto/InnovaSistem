@@ -41,22 +41,6 @@
     el._t = setTimeout(function(){ el.classList.remove('show'); }, 2600);
   }
 
-  /* ---------------- theme ---------------- */
-  var MOON_SVG = '<svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>';
-  var SUN_SVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M4 12H1M23 12h-3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>';
-  function initTheme(){
-    var saved = localStorage.getItem('innova_theme') || 'light';
-    document.documentElement.setAttribute('data-theme', saved);
-    document.getElementById('themeIcon').innerHTML = saved === 'dark' ? SUN_SVG : MOON_SVG;
-    document.getElementById('themeToggle').addEventListener('click', function(){
-      var cur = document.documentElement.getAttribute('data-theme');
-      var next = cur === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('innova_theme', next);
-      document.getElementById('themeIcon').innerHTML = next === 'dark' ? SUN_SVG : MOON_SVG;
-    });
-  }
-
   /* ---------------- navigation ---------------- */
   function initNav(){
     var btns = document.querySelectorAll('.dock-btn[data-view]');
@@ -249,6 +233,177 @@
     document.getElementById('ordersTable').innerHTML = html;
   }
 
+  /* ---------------- CORREO (solo admin24) ---------------- */
+  var MAIL = {mails:[], unread:0};
+  var mailFilter = 'todos';
+  var mailOpen = null;
+  var MAIL_TYPES = {
+    negocio:  {label:'Negocio nuevo', icon:'<path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/>'},
+    consulta: {label:'Consulta',      icon:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.3"/><path d="M12 16.5h.01"/>'},
+    proveedor:{label:'Proveedor',     icon:'<path d="M2 7h11v9H2z"/><path d="M13 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>'},
+    pedido:   {label:'Pedido',        icon:'<path d="M3 8l9-5 9 5-9 5-9-5Z"/><path d="M3 8v9l9 5 9-5V8"/><path d="M12 13v9"/>'}
+  };
+  function esc(v){
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function mailDate(d){
+    var day = d.slice(0,10), hour = d.slice(11,16);
+    return day === todayISO() ? hour : day.slice(8,10) + '/' + day.slice(5,7) + ' ' + hour;
+  }
+
+  function loadMail(){
+    return window.innovaApi('correo.php').then(function(r){
+      if(!r.ok) return;
+      MAIL = r.data;
+      var badge = document.getElementById('mailBadge');
+      badge.textContent = MAIL.unread > 99 ? '99+' : MAIL.unread;
+      badge.hidden = MAIL.unread === 0;
+    });
+  }
+  function mailAct(body, msg){
+    return window.innovaApi('correo.php', body).then(function(r){
+      if(!r.ok){ toast(r.data.error || 'No se pudo guardar'); return false; }
+      if(msg) toast(msg);
+      return loadMail().then(function(){ return true; });
+    });
+  }
+
+  function renderCorreo(){
+    var list = MAIL.mails.filter(function(m){
+      if(mailFilter === 'todos') return true;
+      if(mailFilter === 'sin-leer') return !m.read;
+      return m.type === mailFilter;
+    });
+    var box = document.getElementById('mailList');
+    if(!list.length){
+      box.innerHTML = '<div class="empty-note">'+(MAIL.mails.length ? 'No hay correos en este filtro.' : 'Tu bandeja está vacía. Acá van a llegar los negocios nuevos, las consultas, los avisos de proveedores y los pedidos.')+'</div>';
+    } else {
+      box.innerHTML = list.map(function(m){
+        var t = MAIL_TYPES[m.type] || MAIL_TYPES.negocio;
+        var open = mailOpen === m.id;
+        var extra = '';
+        if(m.type === 'proveedor'){
+          extra += '<div class="mail-used"><b>Negocios que usan a '+esc(m.provider)+':</b> '+
+            (m.usedBy.length ? m.usedBy.map(esc).join(', ') : 'ninguno por ahora')+'</div>';
+        }
+        if(m.type === 'consulta'){
+          extra += m.reply
+            ? '<div class="mail-reply"><div class="mail-reply-head">Tu respuesta · '+esc(mailDate(m.replyDate))+'</div>'+esc(m.reply)+'</div>'
+            : '<form class="mail-reply-form" data-reply="'+m.id+'"><label class="mail-reply-label">Tu respuesta</label><textarea name="text" rows="3" required maxlength="3000"></textarea>'+
+              '<button class="save-btn" type="submit">Responder</button></form>';
+        }
+        return '<div class="mail-item'+(m.read ? '' : ' unread')+(open ? ' open' : '')+'" data-id="'+m.id+'">'+
+          '<button type="button" class="mail-row" data-toggle="'+m.id+'">'+
+            '<span class="mail-ico t-'+m.type+'"><svg viewBox="0 0 24 24">'+t.icon+'</svg></span>'+
+            '<span class="mail-main"><span class="mail-from">'+esc(m.from)+'</span>'+
+              '<span class="mail-subject">'+esc(m.subject)+'</span></span>'+
+            '<span class="mail-meta"><span class="mail-tag t-'+m.type+'">'+t.label+'</span><span class="mail-date">'+esc(mailDate(m.date))+'</span></span>'+
+          '</button>'+
+          (open ?
+            '<div class="mail-body">'+
+              (m.business ? '<div class="mail-biz">Negocio: <b>'+esc(m.business)+'</b></div>' : '')+
+              '<div class="mail-text">'+esc(m.body)+'</div>'+extra+
+              '<div class="mail-actions">'+
+                (m.type === 'proveedor' && m.usedBy.length ? '<button type="button" class="link-btn" data-notify="'+esc(m.provider)+'">Avisar a los negocios que lo usan</button>' : '')+
+                '<button type="button" class="link-btn" data-unread="'+m.id+'">Marcar como no leído</button>'+
+                '<button type="button" class="link-btn danger" data-del-mail="'+m.id+'">Eliminar</button>'+
+              '</div>'+
+            '</div>' : '')+
+        '</div>';
+      }).join('');
+    }
+
+    box.querySelectorAll('[data-toggle]').forEach(function(btn){
+      btn.onclick = function(){
+        var id = btn.getAttribute('data-toggle');
+        var m = MAIL.mails.find(function(x){ return x.id === id; });
+        mailOpen = mailOpen === id ? null : id;
+        if(mailOpen && !m.read){ mailAct({action:'read', id:id, read:true}).then(renderCorreo); }
+        else renderCorreo();
+      };
+    });
+    box.querySelectorAll('[data-unread]').forEach(function(btn){
+      btn.onclick = function(){
+        var id = btn.getAttribute('data-unread');
+        mailOpen = null;
+        mailAct({action:'read', id:id, read:false}).then(renderCorreo);
+      };
+    });
+    box.querySelectorAll('[data-del-mail]').forEach(function(btn){
+      btn.onclick = function(){
+        if(!confirm('¿Eliminar este correo?')) return;
+        mailOpen = null;
+        mailAct({action:'delete', id:btn.getAttribute('data-del-mail')}, 'Correo eliminado').then(renderCorreo);
+      };
+    });
+    box.querySelectorAll('[data-reply]').forEach(function(form){
+      form.onsubmit = function(e){
+        e.preventDefault();
+        mailAct({action:'reply', id:form.getAttribute('data-reply'), text:form.text.value}, 'Respuesta enviada al negocio').then(renderCorreo);
+      };
+    });
+
+    document.querySelectorAll('#mailChips .chip').forEach(function(chip){
+      chip.classList.toggle('active', chip.getAttribute('data-filter') === mailFilter);
+      chip.onclick = function(){ mailFilter = chip.getAttribute('data-filter'); mailOpen = null; renderCorreo(); };
+    });
+    box.querySelectorAll('[data-notify]').forEach(function(btn){
+      btn.onclick = function(){ openNotice('provider', btn.getAttribute('data-notify')); };
+    });
+    initNotice();
+
+    document.getElementById('mailReadAll').onclick = function(){
+      mailAct({action:'read_all'}, 'Todo marcado como leído').then(renderCorreo);
+    };
+  }
+
+  // Aviso para los negocios: todos, los que usan un proveedor, o uno solo.
+  function initNotice(){
+    var form = document.getElementById('noticeForm');
+    if(form._ready) return;
+    form._ready = true;
+    var target = document.getElementById('noticeTarget');
+    function sync(){
+      document.getElementById('noticeProviderField').hidden = target.value !== 'provider';
+      document.getElementById('noticeBusinessField').hidden = target.value !== 'business';
+    }
+    target.onchange = sync;
+    document.getElementById('noticeOpen').onclick = function(){ openNotice('all'); };
+    document.getElementById('noticeCancel').onclick = function(){ document.getElementById('noticeBox').hidden = true; };
+    form.onsubmit = function(e){
+      e.preventDefault();
+      window.innovaApi('correo.php', {
+        action:'notice', target:target.value, provider:form.provider.value, business:form.business.value,
+        subject:form.subject.value, text:form.text.value
+      }).then(function(r){
+        if(!r.ok){ toast(r.data.error || 'No se pudo enviar'); return; }
+        toast('Aviso enviado a ' + r.data.sent + (r.data.sent === 1 ? ' negocio' : ' negocios'));
+        form.reset(); sync();
+        document.getElementById('noticeBox').hidden = true;
+      });
+    };
+    form._sync = sync;
+  }
+  function openNotice(target, provider){
+    initNotice();
+    var form = document.getElementById('noticeForm');
+    document.getElementById('noticeProvider').innerHTML = (MAIL.providers || []).map(function(p){
+      return '<option value="'+esc(p)+'">'+esc(p)+'</option>';
+    }).join('') || '<option value="">(ningún negocio tiene proveedores)</option>';
+    document.getElementById('noticeBusiness').innerHTML = DATA.businesses.map(function(b){
+      return '<option value="'+b.id+'">'+esc(b.businessName)+'</option>';
+    }).join('');
+    form.target.value = target;
+    if(provider) form.provider.value = provider;
+    form._sync();
+    var box = document.getElementById('noticeBox');
+    box.hidden = false;
+    box.scrollIntoView({behavior:'smooth', block:'start'});
+    form.subject.focus();
+  }
+
   /* ---------------- render dispatcher ---------------- */
   function renderAll(){
     var activeView = document.querySelector('.view.active');
@@ -258,14 +413,22 @@
     else if(id === 'view-ingresos') renderIngresos();
     else if(id === 'view-clientes') renderClientes();
     else if(id === 'view-pedidos') renderPedidos();
+    else if(id === 'view-correo') loadMail().then(renderCorreo);
   }
 
   /* ---------------- init ---------------- */
   function boot(){
-    safe(initTheme, 'theme');
     refresh().then(function(){
       safe(initNav, 'nav');
       safe(renderResumen, 'resumen');
+      // contador de correos sin leer (se actualiza cada minuto)
+      loadMail();
+      setInterval(function(){
+        loadMail().then(function(){
+          var active = document.querySelector('.view.active');
+          if(active && active.id === 'view-correo' && !mailOpen) renderCorreo();
+        });
+      }, 60000);
     }).catch(function(err){ console.warn('[InnovaSistem superadmin] boot', err); });
   }
 

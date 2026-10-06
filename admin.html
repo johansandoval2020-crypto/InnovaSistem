@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-default-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,15 +8,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=20261006d">
+<link rel="stylesheet" href="admin.css?v=20261006j">
+<link rel="stylesheet" href="ajustes.css?v=20261006a">
+<script src="i18n.js?v=20261006c"></script>
+<script src="ajustes.js?v=20261006a"></script>
 </head>
 <body>
-
-<div class="orb-field" aria-hidden="true">
-  <span class="mini-orb o1"></span>
-  <span class="mini-orb o2"></span>
-  <span class="mini-orb o3"></span>
-</div>
 
 <nav class="dock" id="dock">
   <img class="dock-logo" src="imagenes/logo.png" alt="">
@@ -27,10 +24,10 @@
   <button class="dock-btn" data-view="proveedores"><span class="dbi"><svg viewBox="0 0 24 24"><path d="M2 7h11v9H2z"/><path d="M13 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg></span><span class="tip">Proveedores</span></button>
   <button class="dock-btn" data-view="clientes"><span class="dbi"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.4 4.5 2.5 4.5 5.8"/></svg></span><span class="tip">Clientes</span></button>
   <button class="dock-btn" data-view="ingresos"><span class="dbi"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.3 9.8c0-1.2 1.2-2 2.7-2s2.7.9 2.7 2-1.2 1.6-2.7 2-2.7.9-2.7 2 1.2 2 2.7 2 2.7-.8 2.7-2"/></svg></span><span class="tip">Ingresos</span></button>
+  <button class="dock-btn" data-view="correo"><span class="dbi"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></span><span class="mail-badge" id="dockMailBadge" hidden>0</span><span class="tip">Correo</span></button>
   <button class="dock-btn" data-view="pagos"><span class="dbi"><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19"/><path d="M6 15h4"/></svg></span><span class="tip">Pagos</span></button>
 
   <div class="dock-sep"></div>
-  <button class="dock-btn" id="themeToggle"><span class="dbi" id="themeIcon"><svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></span><span class="tip">Tema</span></button>
   <button class="dock-btn" id="logoutBtn"><span class="dbi"><svg viewBox="0 0 24 24"><path d="M9 4H5v16h4"/><path d="M14 8l4 4-4 4"/><path d="M18 12H9"/></svg></span><span class="tip">Salir</span></button>
 </nav>
 
@@ -42,6 +39,8 @@
       <p>Bienvenido a tu panel <span class="type-badge" id="bizTypeBadge">—</span></p>
     </div>
     <div class="topbar-right">
+      <button class="btn-support" id="supportBtn" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>Correo<span class="mail-badge" id="supportBadge" hidden>0</span></button>
+      <span data-ajustes-slot></span>
       <button class="btn-logout" id="logoutBtn2">Cerrar sesión</button>
     </div>
   </div>
@@ -127,6 +126,20 @@
     </div>
   </section>
 
+  <!-- CORREO (tipo Gmail) -->
+  <section class="view" id="view-correo">
+    <div class="sec-head"><div><h1>Correo</h1><p>Noticias de InnovaSistem, respuestas a tus consultas y avisos de tus pedidos.</p></div></div>
+    <div class="gmail panel-box">
+      <aside class="gm-side">
+        <button type="button" class="gm-compose" id="gmCompose"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Redactar</button>
+        <button type="button" class="gm-folder active" data-folder="inbox"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6Z"/></svg>Recibidos<span class="gm-count" id="gmInboxCount"></span></button>
+        <button type="button" class="gm-folder" data-folder="sent"><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Enviados</button>
+      </aside>
+      <div class="gm-list" id="gmList"></div>
+      <div class="gm-read" id="gmRead"></div>
+    </div>
+  </section>
+
 </main>
 
 <!-- MODALS -->
@@ -138,6 +151,6 @@
 
 <script src="data.js?v=20261006a"></script>
 <script src="api.js?v=20261006a"></script>
-<script defer src="admin.js?v=20261006c"></script>
+<script defer src="admin.js?v=20261006g"></script>
 </body>
 </html>

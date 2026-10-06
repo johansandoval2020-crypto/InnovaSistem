@@ -75,22 +75,6 @@
     document.getElementById('bizTypeBadge').textContent = typeInfo.label;
   }
 
-  /* ---------------- theme ---------------- */
-  var MOON_SVG = '<svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>';
-  var SUN_SVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M4 12H1M23 12h-3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>';
-  function initTheme(){
-    var saved = localStorage.getItem('innova_theme') || 'light';
-    document.documentElement.setAttribute('data-theme', saved);
-    document.getElementById('themeIcon').innerHTML = saved === 'dark' ? SUN_SVG : MOON_SVG;
-    document.getElementById('themeToggle').addEventListener('click', function(){
-      var cur = document.documentElement.getAttribute('data-theme');
-      var next = cur === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('innova_theme', next);
-      document.getElementById('themeIcon').innerHTML = next === 'dark' ? SUN_SVG : MOON_SVG;
-    });
-  }
-
   /* ---------------- navigation ---------------- */
   function initNav(){
     var btns = document.querySelectorAll('.dock-btn[data-view]');
@@ -473,8 +457,8 @@
       '<div class="modal-head"><h3>'+(isNew ? 'Agregar ' : 'Editar ')+typeInfo.clientNoun+'</h3><button class="modal-close" id="mClose">✕</button></div>'+
       '<form id="cliForm" class="form-grid">'+
         '<div class="f-field full"><label>Nombre</label><input name="name" required maxlength="100" value="'+(isNew?'':esc(c.name))+'"></div>'+
-        '<div class="f-field"><label>Teléfono</label><input name="phone" maxlength="20" placeholder="7000-0000" value="'+(isNew||c.phone==='—'?'':esc(c.phone))+'"></div>'+
-        '<div class="f-field"><label>Correo</label><input name="email" type="email" maxlength="100" placeholder="cliente@correo.com" value="'+(isNew?'':esc(c.email))+'"></div>'+
+        '<div class="f-field"><label>Teléfono</label><input name="phone" maxlength="20" value="'+(isNew||c.phone==='—'?'':esc(c.phone))+'"></div>'+
+        '<div class="f-field"><label>Correo</label><input name="email" type="email" maxlength="100" value="'+(isNew?'':esc(c.email))+'"></div>'+
         '<div class="f-field full"><label>Dirección</label><input name="address" maxlength="150" value="'+(isNew?'':esc(c.address))+'"></div>'+
         (isNew ?
           '<div class="f-field full"><label>Primera compra (opcional)</label><select name="item"><option value="">— Sin compra por ahora —</option>'+itemOptions+'</select></div>'+
@@ -682,6 +666,122 @@
     });
   }
 
+  /* ---------------- CORREO del negocio (tipo Gmail) ----------------
+     Recibidos: avisos de InnovaSistem, respuestas y avisos de pedidos.
+     Enviados: consultas a InnovaSistem (le llegan al Correo de admin24). */
+  var BOX = {inbox:[], sent:[], unread:0};
+  var gmFolder = 'inbox';
+  var gmSel = null;       // id del mensaje abierto, o 'compose'
+  var GM_TYPES = {
+    aviso:     {label:'Aviso',     cls:'t-negocio',  icon:'<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>'},
+    respuesta: {label:'Respuesta', cls:'t-consulta', icon:'<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v6"/>'},
+    pedido:    {label:'Pedido',    cls:'t-pedido',   icon:'<path d="M3 8l9-5 9 5-9 5-9-5Z"/><path d="M3 8v9l9 5 9-5V8"/><path d="M12 13v9"/>'},
+    enviado:   {label:'Enviado',   cls:'t-proveedor',icon:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>'}
+  };
+  function gmDate(d){
+    var day = d.slice(0,10), hour = d.slice(11,16);
+    return day === todayISO() ? hour : day.slice(8,10) + '/' + day.slice(5,7);
+  }
+
+  function loadBox(){
+    return window.innovaApi('buzon.php').then(function(r){
+      if(!r.ok) return;
+      BOX = r.data;
+      ['supportBadge','dockMailBadge'].forEach(function(id){
+        var b = document.getElementById(id);
+        b.textContent = BOX.unread > 99 ? '99+' : BOX.unread;
+        b.hidden = BOX.unread === 0;
+      });
+      document.getElementById('gmInboxCount').textContent = BOX.unread || '';
+    });
+  }
+  function boxAct(body, msg){
+    return window.innovaApi('buzon.php', body).then(function(r){
+      if(!r.ok){ toast(r.data.error || 'No se pudo guardar'); return false; }
+      if(msg) toast(msg);
+      return loadBox().then(function(){ return true; });
+    });
+  }
+
+  function renderCorreo(){
+    document.querySelectorAll('.gm-folder').forEach(function(f){
+      f.classList.toggle('active', f.getAttribute('data-folder') === gmFolder);
+      f.onclick = function(){ gmFolder = f.getAttribute('data-folder'); gmSel = null; renderCorreo(); };
+    });
+    document.getElementById('gmCompose').onclick = function(){ gmSel = 'compose'; renderCorreo(); };
+
+    var items = gmFolder === 'inbox' ? BOX.inbox : BOX.sent.map(function(m){
+      return {id:m.id, type:'enviado', from:'Para: InnovaSistem', subject:m.subject, body:m.body, date:m.date, read:true, reply:m.reply, replyDate:m.replyDate};
+    });
+    var list = document.getElementById('gmList');
+    list.innerHTML = items.length ? items.map(function(m){
+      var t = GM_TYPES[m.type] || GM_TYPES.aviso;
+      return '<button type="button" class="gm-item'+(m.read ? '' : ' unread')+(gmSel === m.id ? ' sel' : '')+'" data-open="'+m.id+'">'+
+        '<span class="mail-ico '+t.cls+'"><svg viewBox="0 0 24 24">'+t.icon+'</svg></span>'+
+        '<span class="gm-item-main"><span class="gm-item-top"><span class="gm-from">'+esc(m.from)+'</span><span class="gm-date">'+esc(gmDate(m.date))+'</span></span>'+
+        '<span class="gm-subject">'+esc(m.subject)+'</span>'+
+        '<span class="gm-snippet">'+esc(m.body.replace(/\s+/g,' ').slice(0,90))+'</span></span>'+
+      '</button>';
+    }).join('') : '<div class="empty-note">'+(gmFolder === 'inbox' ? 'No tenés mensajes todavía. Acá te llegan las noticias de InnovaSistem y los avisos de tus pedidos.' : 'Todavía no le escribiste a InnovaSistem.')+'</div>';
+
+    list.querySelectorAll('[data-open]').forEach(function(b){
+      b.onclick = function(){
+        var id = b.getAttribute('data-open');
+        gmSel = id;
+        var m = items.find(function(x){ return x.id === id; });
+        if(gmFolder === 'inbox' && m && !m.read){ boxAct({action:'read', id:id, read:true}).then(renderCorreo); }
+        else renderCorreo();
+      };
+    });
+
+    var read = document.getElementById('gmRead');
+    document.querySelector('.gmail').classList.toggle('reading', !!gmSel);
+    if(gmSel === 'compose'){
+      read.innerHTML =
+        '<div class="gm-read-head"><button type="button" class="gm-back" id="gmBack">←</button><h3>Mensaje nuevo</h3></div>'+
+        '<div class="gm-to">Para: <b>InnovaSistem</b> (soporte)</div>'+
+        '<form id="gmForm" class="form-grid">'+
+          '<div class="f-field full"><label>Asunto</label><input name="subject" required maxlength="200"></div>'+
+          '<div class="f-field full"><label>Mensaje</label><textarea name="message" rows="8" required maxlength="3000"></textarea></div>'+
+          '<div class="full"><button class="save-btn" type="submit">Enviar</button></div>'+
+        '</form>';
+      document.getElementById('gmForm').onsubmit = function(e){
+        e.preventDefault();
+        var f = e.target;
+        boxAct({action:'send', subject:f.subject.value, message:f.message.value}, 'Consulta enviada a InnovaSistem').then(function(ok){
+          if(ok){ gmFolder = 'sent'; gmSel = null; renderCorreo(); }
+        });
+      };
+    } else {
+      var m = gmSel && items.find(function(x){ return x.id === gmSel; });
+      if(!m){
+        read.innerHTML = '<div class="gm-empty"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg><p>Elegí un mensaje para leerlo</p></div>';
+      } else {
+        var t = GM_TYPES[m.type] || GM_TYPES.aviso;
+        read.innerHTML =
+          '<div class="gm-read-head"><button type="button" class="gm-back" id="gmBack">←</button><h3>'+esc(m.subject)+'</h3></div>'+
+          '<div class="gm-meta"><span class="mail-ico '+t.cls+'"><svg viewBox="0 0 24 24">'+t.icon+'</svg></span>'+
+            '<div><b>'+esc(m.from)+'</b><div class="gm-date">'+esc(m.date.slice(0,16))+'</div></div>'+
+            '<span class="mail-tag '+t.cls+'">'+t.label+'</span></div>'+
+          '<div class="gm-body">'+esc(m.body)+'</div>'+
+          (m.type === 'enviado' ? (m.reply
+            ? '<div class="mail-reply"><div class="mail-reply-head">Respuesta de InnovaSistem · '+esc(m.replyDate.slice(0,16))+'</div>'+esc(m.reply)+'</div>'
+            : '<div class="s-wait">Esperando respuesta…</div>') : '')+
+          (gmFolder === 'inbox' ? '<div class="mail-actions"><button type="button" class="link-btn" id="gmUnread">Marcar como no leído</button><button type="button" class="link-btn danger" id="gmDelete">Eliminar</button></div>' : '');
+        if(gmFolder === 'inbox'){
+          document.getElementById('gmUnread').onclick = function(){ var id = gmSel; gmSel = null; boxAct({action:'read', id:id, read:false}).then(renderCorreo); };
+          document.getElementById('gmDelete').onclick = function(){
+            if(!confirm('¿Eliminar este mensaje?')) return;
+            var id = gmSel; gmSel = null;
+            boxAct({action:'delete', id:id}, 'Mensaje eliminado').then(renderCorreo);
+          };
+        }
+      }
+    }
+    var back = document.getElementById('gmBack');
+    if(back) back.onclick = function(){ gmSel = null; renderCorreo(); };
+  }
+
   /* ---------------- render dispatcher ---------------- */
   function renderAll(){
     var activeView = document.querySelector('.view.active');
@@ -694,16 +794,27 @@
     else if(id === 'view-clientes') renderClientes();
     else if(id === 'view-ingresos') renderIngresos();
     else if(id === 'view-pagos') renderPagos();
+    else if(id === 'view-correo') loadBox().then(renderCorreo);
   }
 
   /* ---------------- init ---------------- */
   function boot(){
-    safe(initTheme, 'theme');
     refresh().then(seedIfEmpty).then(function(){
       safe(renderTopbar, 'topbar');
       safe(initNav, 'nav');
       safe(initModalBase, 'modalBase');
       safe(renderResumen, 'resumen');
+      // el botón "Correo" de arriba abre la misma sección que el del dock
+      document.getElementById('supportBtn').addEventListener('click', function(){
+        document.querySelector('.dock-btn[data-view="correo"]').click();
+      });
+      loadBox();
+      setInterval(function(){
+        loadBox().then(function(){
+          var active = document.querySelector('.view.active');
+          if(active && active.id === 'view-correo' && gmSel === null) renderCorreo();
+        });
+      }, 60000);
     }).catch(function(err){ console.warn('[InnovaSistem admin] boot', err); });
   }
 

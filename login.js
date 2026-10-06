@@ -173,7 +173,8 @@
         ownerName: fd.get('ownerName'),
         email: fd.get('email'),
         password: fd.get('password'),
-        type: type
+        type: type,
+        typeLabel: (window.INNOVA_DATA.getType(type) || {}).label || type
       }).then(function(r){
         busy(panelRegister, false);
         if(!r.ok){ showMsg(r.data.error || 'No se pudo crear la cuenta.', 'err'); return; }

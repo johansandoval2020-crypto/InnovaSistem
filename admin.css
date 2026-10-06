@@ -47,21 +47,6 @@ p{margin:0;color:var(--text-dim);}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
 a{color:inherit;text-decoration:none;}
 
-/* mini orbs */
-.orb-field{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
-.mini-orb{
-  position:absolute;border-radius:50%;
-  background:url('imagenes/orbe.png') center/cover;
-  box-shadow:0 20px 50px -14px rgba(34,26,61,.5);
-  animation:orb-float 12s ease-in-out infinite;
-}
-.mini-orb.o1{width:24px;height:24px;top:8%;left:40%;animation-duration:13s;}
-.mini-orb.o2{width:16px;height:16px;top:70%;left:96%;animation-duration:9s;animation-delay:1s;}
-.mini-orb.o3{width:20px;height:20px;top:88%;left:45%;animation-duration:11s;animation-delay:.5s;}
-@keyframes orb-float{
-  0%,100%{transform:translateY(0) rotate(0deg);}
-  50%{transform:translateY(-18px) rotate(10deg);}
-}
 
 /* ---------------- sidebar dock ---------------- */
 .dock{
@@ -98,6 +83,7 @@ html[data-theme="dark"] .dock-btn{color:var(--beige);}
   display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:14px;
   background:var(--surface);backdrop-filter:blur(18px) saturate(160%);border:1px solid var(--glass-border);
   border-radius:var(--radius-lg);padding:18px 24px;
+  position:relative;z-index:60; /* el panel de ajustes (tuerca) tiene que quedar encima de las vistas */
 }
 .topbar-title h1{font-size:1.7rem;}
 .topbar-title p{font-size:.85rem;margin-top:2px;}
@@ -325,3 +311,177 @@ html[data-theme="dark"] .invoice .inv-num b{color:var(--moss-soft);}
   .dock::-webkit-scrollbar{display:none;}
   .dock-btn, .dock-sep{flex:none;}
 }
+
+/* ---------------- modo claro "Vivo" en los paneles (igual que la landing y el login) ----------------
+   El satín oscuro queda solo para el modo oscuro. En claro: fondo claro con
+   manchas violeta/azul, tarjetas blancas nítidas con sombra suave. */
+html[data-theme="light"]{
+  --surface:rgba(255,255,255,.94);
+  --glass-border:rgba(15,26,61,.07);
+  --text:#0F1A3D;
+  --text-dim:#5A6380;
+  --line:rgba(15,26,61,.1);
+  --beige-2:#EEF0F8;
+}
+html[data-theme="light"] body{
+  background-color:#F4F6FC;
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(108,92,231,.2), transparent 38%),
+    radial-gradient(circle at 88% 18%, rgba(43,91,215,.18), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(108,92,231,.12), transparent 45%);
+  background-attachment:fixed;
+}
+html[data-theme="light"] .topbar,
+html[data-theme="light"] .sec-head,
+html[data-theme="light"] .kpi-card,
+html[data-theme="light"] .panel-box,
+html[data-theme="light"] .item-card{box-shadow:0 1px 2px rgba(15,26,61,.05), 0 16px 34px -26px rgba(43,40,140,.4);}
+html[data-theme="light"] .item-card:hover{box-shadow:0 2px 4px rgba(15,26,61,.06), 0 26px 46px -24px rgba(76,80,220,.45);}
+html[data-theme="light"] .dock{background:rgba(255,255,255,.92);border-color:rgba(15,26,61,.08);box-shadow:0 20px 50px -24px rgba(43,40,140,.45);}
+html[data-theme="light"] .item-card .name,
+html[data-theme="light"] .provider-list-item .pname,
+html[data-theme="light"] .cart-total{color:#0F1A3D;}
+html[data-theme="light"] .add-btn,
+html[data-theme="light"] .save-btn,
+html[data-theme="light"] .add-tile .plus-circle{background:linear-gradient(135deg,#6C5CE7 0%,#2B5BD7 100%);color:#fff;}
+html[data-theme="light"] .chip.active{background:linear-gradient(135deg,#6C5CE7 0%,#2B5BD7 100%);border-color:transparent;color:#fff;}
+html[data-theme="light"] .type-badge{background:linear-gradient(135deg,#6C5CE7 0%,#2B5BD7 100%);}
+
+/* ---------------- correo (super-admin, solo admin24) ---------------- */
+.dock-btn{position:relative;}
+.mail-badge{
+  position:absolute;top:2px;right:2px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;
+  background:#E85FA8;color:#fff;font-size:.66rem;font-weight:700;line-height:18px;text-align:center;
+  box-shadow:0 0 0 2px var(--surface);
+}
+.mail-badge[hidden]{display:none;}
+.mail-box{padding:8px;}
+.mail-list{display:flex;flex-direction:column;}
+.mail-item{border-radius:16px;transition:background .25s;}
+.mail-item + .mail-item{border-top:1px solid var(--line);}
+.mail-item.open{background:var(--beige-2);}
+.mail-row{
+  width:100%;display:grid;grid-template-columns:40px 1fr auto;gap:14px;align-items:center;
+  padding:14px 14px;text-align:left;border-radius:16px;cursor:pointer;color:var(--text);
+}
+.mail-row:hover{background:var(--beige-2);}
+.mail-ico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;}
+.mail-ico svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.mail-ico.t-negocio{background:linear-gradient(135deg,#6C5CE7,#2B5BD7);}
+.mail-ico.t-consulta{background:linear-gradient(135deg,#E85FA8,#B04CD8);}
+.mail-ico.t-proveedor{background:linear-gradient(135deg,#1FA4A6,#2B7BD7);}
+.mail-ico.t-pedido{background:linear-gradient(135deg,#F0913A,#E25C5C);}
+.mail-main{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.mail-from{font-size:.78rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mail-subject{font-size:.92rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mail-item.unread .mail-subject{font-weight:700;}
+.mail-item.unread .mail-from{color:var(--text);font-weight:600;}
+.mail-meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+.mail-tag{font-size:.66rem;font-weight:700;letter-spacing:.03em;padding:3px 9px;border-radius:999px;white-space:nowrap;}
+.mail-tag.t-negocio{background:rgba(108,92,231,.14);color:#4F3DC0;}
+.mail-tag.t-consulta{background:rgba(232,95,168,.16);color:#B0306F;}
+.mail-tag.t-proveedor{background:rgba(31,164,166,.16);color:#127577;}
+.mail-tag.t-pedido{background:rgba(240,145,58,.18);color:#A85412;}
+html[data-theme="dark"] .mail-tag{filter:brightness(1.6);}
+.mail-date{font-size:.74rem;color:var(--text-dim);}
+.mail-item.unread .mail-date{color:var(--text);font-weight:700;}
+.mail-body{padding:0 16px 18px 68px;font-size:.88rem;color:var(--text);}
+.mail-biz{font-size:.8rem;color:var(--text-dim);margin-bottom:8px;}
+.mail-text{white-space:pre-line;line-height:1.6;}
+.mail-used{margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(31,164,166,.1);font-size:.82rem;}
+.mail-reply{margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(108,92,231,.1);white-space:pre-line;}
+.mail-reply-head{font-size:.74rem;font-weight:700;color:var(--midnight);margin-bottom:4px;}
+html[data-theme="dark"] .mail-reply-head{color:var(--moss-soft);}
+.mail-reply-form{margin-top:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;}
+.mail-reply-form textarea{
+  width:100%;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--paper);
+  color:var(--ink);font:inherit;font-size:.86rem;resize:vertical;
+}
+html[data-theme="dark"] .mail-reply-form textarea{background:#170F35;color:var(--beige);}
+.mail-reply-form .save-btn{margin-top:4px;}
+.mail-actions{display:flex;gap:16px;margin-top:14px;}
+@media (max-width:600px){
+  .mail-row{grid-template-columns:36px 1fr;}
+  .mail-meta{grid-column:2;flex-direction:row;align-items:center;}
+  .mail-body{padding-left:16px;}
+}
+
+/* botón Soporte del panel del negocio */
+.btn-support{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;position:relative;
+  border:1.5px solid var(--line);color:var(--text);font-size:.84rem;font-weight:600;transition:background .3s,border-color .3s;
+}
+.btn-support svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.btn-support:hover{border-color:var(--midnight);background:var(--beige-2);}
+.btn-support .mail-badge{top:-6px;right:-6px;}
+.support-list{margin-top:22px;display:flex;flex-direction:column;gap:10px;}
+.support-item{padding:12px 14px;border-radius:14px;background:var(--beige-2);font-size:.86rem;}
+.support-item .s-head{display:flex;justify-content:space-between;gap:10px;font-weight:700;margin-bottom:4px;}
+.support-item .s-date{font-weight:400;font-size:.74rem;color:var(--text-dim);white-space:nowrap;}
+.support-item .s-msg{white-space:pre-line;color:var(--text-dim);}
+.support-item .mail-reply{margin-top:10px;}
+.support-item .s-wait{margin-top:8px;font-size:.76rem;color:var(--text-dim);font-style:italic;}
+.f-field textarea{width:100%;resize:vertical;}
+
+/* ---------------- correo del negocio (tipo Gmail) ---------------- */
+.gmail{display:grid;grid-template-columns:190px minmax(240px,340px) 1fr;gap:0;padding:0;overflow:hidden;min-height:520px;}
+.gm-side{padding:18px 12px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:4px;}
+.gm-compose{
+  display:flex;align-items:center;gap:10px;padding:13px 18px;margin-bottom:12px;border-radius:16px;
+  background:linear-gradient(135deg,#6C5CE7 0%,#2B5BD7 100%);color:#fff;font-weight:700;font-size:.88rem;
+  box-shadow:0 12px 26px -14px rgba(76,80,220,.75);transition:transform .3s var(--ease);
+}
+.gm-compose:hover{transform:translateY(-2px);}
+.gm-compose svg, .gm-folder svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;}
+.gm-folder{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;font-size:.86rem;color:var(--text);text-align:left;}
+.gm-folder:hover{background:var(--beige-2);}
+.gm-folder.active{background:rgba(108,92,231,.14);color:#4F3DC0;font-weight:700;}
+html[data-theme="dark"] .gm-folder.active{color:var(--moss-soft);}
+.gm-count{margin-left:auto;font-size:.74rem;font-weight:700;}
+.gm-list{border-right:1px solid var(--line);overflow-y:auto;max-height:640px;}
+.gm-item{
+  width:100%;display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:flex-start;padding:14px 16px;
+  text-align:left;border-bottom:1px solid var(--line);color:var(--text);transition:background .2s;
+}
+.gm-item:hover{background:var(--beige-2);}
+.gm-item.sel{background:rgba(108,92,231,.12);}
+.gm-item .mail-ico{width:36px;height:36px;border-radius:11px;}
+.gm-item-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.gm-item-top{display:flex;justify-content:space-between;gap:8px;}
+.gm-from{font-size:.8rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gm-date{font-size:.72rem;color:var(--text-dim);white-space:nowrap;}
+.gm-subject{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gm-snippet{font-size:.78rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gm-item.unread .gm-subject, .gm-item.unread .gm-from{font-weight:700;color:var(--text);}
+.gm-item.unread{box-shadow:inset 3px 0 0 #6C5CE7;}
+.gm-read{padding:22px 26px;overflow-y:auto;max-height:640px;}
+.gm-read-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.gm-read-head h3{font-size:1.2rem;}
+.gm-back{display:none;width:34px;height:34px;border-radius:50%;background:var(--beige-2);font-size:1rem;flex:none;}
+.gm-meta{display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--line);font-size:.86rem;}
+.gm-meta .mail-tag{margin-left:auto;}
+.gm-to{font-size:.86rem;color:var(--text-dim);margin-bottom:14px;}
+.gm-body{white-space:pre-line;line-height:1.7;font-size:.92rem;}
+.gm-read .s-wait{margin-top:14px;font-size:.8rem;color:var(--text-dim);font-style:italic;}
+.gm-empty{height:100%;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-dim);}
+.gm-empty svg{width:46px;height:46px;fill:none;stroke:currentColor;stroke-width:1.2;opacity:.5;}
+@media (max-width:1100px){
+  .gmail{grid-template-columns:170px 1fr;}
+  .gm-read{display:none;grid-column:2;}
+  .gmail.reading .gm-list{display:none;}
+  .gmail.reading .gm-read{display:block;}
+  .gm-back{display:inline-block;}
+}
+@media (max-width:640px){
+  .gmail{grid-template-columns:1fr;}
+  .gm-side{flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--line);}
+  .gm-compose{margin-bottom:0;}
+  .gm-read{grid-column:1;}
+}
+
+/* aviso a negocios desde el correo de admin24 */
+.notice-box{margin-bottom:18px;}
+.notice-box[hidden]{display:none;}
+.notice-box textarea{width:100%;resize:vertical;}
+html[data-theme="dark"] .f-field textarea{background:#170F35;color:var(--beige);}
+.mail-reply-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);font-weight:600;}

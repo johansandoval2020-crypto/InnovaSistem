@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-default-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,18 +8,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="login.css?v=20261005a">
+<link rel="stylesheet" href="login.css?v=20261006d">
+<link rel="stylesheet" href="ajustes.css?v=20261006a">
+<script src="i18n.js?v=20261006c"></script>
+<script src="ajustes.js?v=20261006a"></script>
 </head>
 <body>
 
 <a href="index.html" class="back-home">&larr; Volver al inicio</a>
-<div class="orb-field" aria-hidden="true">
-  <span class="mini-orb o1"></span>
-  <span class="mini-orb o2"></span>
-  <span class="mini-orb o3"></span>
-  <span class="mini-orb o4"></span>
-</div>
-
 <div class="auth-card">
 
   <div class="auth-form-panel">
@@ -44,11 +40,11 @@
     <form class="panel active" id="panelLogin">
       <div class="field">
         <label>Correo o usuario</label>
-        <input type="text" name="email" placeholder="tu@negocio.com" autocomplete="username" required>
+        <input type="text" name="email" autocomplete="username" required>
       </div>
       <div class="field">
         <label>Contraseña</label>
-        <input type="password" name="password" placeholder="••••••••" required>
+        <input type="password" name="password" required>
       </div>
       <button type="submit" class="submit-btn">Entrar a mi panel →</button>
       <button type="button" id="gotoAdminLogin" class="admin-btn">
@@ -62,11 +58,11 @@
     <form class="panel" id="panelAdminLogin">
       <div class="field">
         <label>Correo de administrador</label>
-        <input type="email" name="email" placeholder="admin24@gmail.com" required>
+        <input type="email" name="email" required>
       </div>
       <div class="field">
         <label>Contraseña</label>
-        <input type="password" name="password" placeholder="••••••••" required>
+        <input type="password" name="password" required>
       </div>
       <button type="submit" class="submit-btn">Entrar como administrador →</button>
       <p class="switch-line"><button type="button" id="backFromAdminLogin">← Volver a iniciar sesión</button></p>
@@ -76,12 +72,12 @@
     <form class="panel" id="panelRegister">
       <div class="field">
         <label>Nombre del negocio</label>
-        <input type="text" name="businessName" placeholder="Ej. Barbería Don Chepe" required>
+        <input type="text" name="businessName" required>
       </div>
       <div class="field">
         <label>¿Qué tipo de negocio es?</label>
         <div class="type-combo" id="typeCombo">
-          <input type="text" id="typeSearch" placeholder="Buscá tu oficio: barbería, ferretería, cafetería…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="typeList">
+          <input type="text" id="typeSearch" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="typeList">
           <input type="hidden" name="type" id="typeValue">
           <div class="type-list" id="typeList" role="listbox" hidden></div>
         </div>
@@ -89,16 +85,16 @@
       <div class="field-row">
         <div class="field">
           <label>Tu nombre</label>
-          <input type="text" name="ownerName" placeholder="Nombre completo" required>
+          <input type="text" name="ownerName" required>
         </div>
         <div class="field">
           <label>Correo</label>
-          <input type="email" name="email" placeholder="tu@negocio.com" required>
+          <input type="email" name="email" required>
         </div>
       </div>
       <div class="field">
         <label>Contraseña</label>
-        <input type="password" name="password" placeholder="••••••••" required minlength="4">
+        <input type="password" name="password" required minlength="4">
       </div>
       <button type="submit" class="submit-btn">Crear mi negocio →</button>
       <p class="switch-line">¿Ya tenés cuenta? <button type="button" data-goto="login">Iniciá sesión</button></p>
@@ -112,6 +108,6 @@
 
 <script src="data.js?v=20261006a"></script>
 <script src="api.js?v=20261006a"></script>
-<script defer src="login.js?v=20261006a"></script>
+<script defer src="login.js?v=20261006b"></script>
 </body>
 </html>

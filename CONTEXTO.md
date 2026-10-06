@@ -1,11 +1,70 @@
 # InnovaSistem — Contexto del proyecto
 
-Sitio estático (HTML/CSS/JS puro, sin build, sin npm) para un sistema de gestión
-pensado para tres rubros: **Clínica**, **Pupusería** y **Taller automotriz**.
+Sistema de gestión para negocios locales de El Salvador (más de 280 oficios):
+HTML/CSS/JS puro + **PHP + MySQL (XAMPP)**, sin build ni npm.
 
 Si estás retomando esto en una conversación nueva de Claude: leé este archivo
 completo antes de tocar código. Resume decisiones ya tomadas para no repetir
-preguntas ni deshacer trabajo.
+preguntas ni deshacer trabajo. Las secciones de más abajo están en orden
+cronológico; si algo se contradice, vale lo más nuevo (y esta primera sección).
+
+## ▶ Dónde quedamos (2026-10-06) — empezar por acá
+
+**Rama de trabajo: `php-mysql`** (NO `main`). `main` es la versión vieja con
+localStorage que sigue publicada en Vercel (https://innovasistem.vercel.app);
+Vercel no corre PHP, así que no mergear a `main` sin decidir el hosting.
+
+### Cómo levantarlo en otra compu (casa)
+1. Instalar XAMPP (Apache + MySQL + PHP 8).
+2. `git clone https://github.com/johansandoval2020-crypto/InnovaSistem.git`
+   y después `git checkout php-mysql`.
+3. Poner la carpeta en `C:\xampp\htdocs\innovasistem` (copiarla, o crear un
+   junction desde PowerShell:
+   `New-Item -ItemType Junction -Path C:\xampp\htdocs\innovasistem -Target <carpeta del repo>`).
+4. Encender Apache y MySQL en el XAMPP Control Panel.
+5. En phpMyAdmin: crear la base `sistema_multinegocios` e importar
+   **`database/hosting_completo.sql`** (base completa y actual, en cero).
+   Alternativa: importar `database/sistema_multinegocios.sql` (el SQL
+   original de la clase) y después `database/innovasistem_extra.sql`.
+6. Abrir `http://localhost/innovasistem`. Usuarios de prueba del .sql:
+   `mchayo`, `ngomez`, `dpirilin`, etc. con contraseña `1234`.
+   Administrador general: `admin24@gmail.com` (cualquier contraseña).
+7. Sin `api/config.php` se usan los datos de XAMPP (root sin contraseña).
+   Al hacer commits, el autor tiene que ser la cuenta de GitHub
+   `johansandoval2020-crypto` (Vercel bloquea commits de otros autores):
+   `git config user.name "johansandoval2020-crypto"` y
+   `git config user.email "258474288+johansandoval2020-crypto@users.noreply.github.com"`.
+
+### Estado actual (todo funcionando en XAMPP)
+- Landing (5 páginas), login/registro con buscador de 286 oficios, panel del
+  negocio y panel de admin24, todo contra MySQL vía `api/*.php`.
+- Tuerca ⚙ en todas las páginas: tema claro/oscuro, zoom, idioma ES/EN.
+- Modo claro "Vivo" en todo el sitio (ver punto 15); sin mini-orbes.
+- Correo de admin24 + correo tipo Gmail de cada negocio (ver punto 15).
+- La base está **en cero** (sin ventas, pagos, pedidos, correos ni stock),
+  con 13 negocios (los 10 del .sql + 3 creados por el usuario: Nataly
+  Daniela, LAGALGA, Carlanguas) y 10 clientes.
+  `database/reiniciar_en_cero.sql` vuelve a dejar los movimientos en cero.
+- Los campos de los formularios **no tienen textos de ejemplo**
+  (placeholders), a pedido del usuario; solo quedan los de los dos
+  buscadores ("Buscar cliente…", "Buscar cliente o producto…").
+
+### Pendiente / preguntas abiertas
+1. **Eliminar en la base de datos:** el usuario pidió "poder eliminar". Ya se
+   pueden borrar clientes, productos, proveedores del negocio, negocios
+   (admin24) y correos. Falta confirmar si quiere **eliminar ventas** (con su
+   factura y pago, devolviendo stock) y/o **pedidos**. Se le preguntó; sin
+   respuesta todavía.
+2. **Agregar productos:** el botón "Nuevo producto" se quitó a pedido del
+   usuario; se le preguntó si lo quiere de vuelta.
+3. **Publicar en línea:** se eligió **InfinityFree** (gratis, PHP + MySQL).
+   Ya están listos `database/hosting_completo.sql` y
+   `api/config.example.php` (copiar a `api/config.php` con los datos del
+   hosting; ese archivo está en .gitignore). Falta que el usuario cree la
+   cuenta y pase hostname / nombre de base / usuario (la contraseña la pone
+   él). El `.zip` para subir se arma sin `database/`, `.git` ni notas.
+4. Los buscadores todavía tienen texto; se ofreció cambiarlo por un ícono de
+   lupa si lo quiere sin texto.
 
 ## Estructura de archivos
 
@@ -370,6 +429,63 @@ en la base MySQL `sistema_multinegocios` de XAMPP:
       logo lleva un aro violeta. El `.btn-outline` del nav tiene override.
     - Se quitó el reloj "HORA LOCAL" del hero (HTML, CSS y `initClock`).
     - Al cambiar CSS/JS, subir el `?v=` en los HTML: los celulares cachean.
+
+14. **Tuerca de ajustes en todas las páginas (2026-10-06)** — `ajustes.js` +
+    `ajustes.css` + `i18n.js`, cargados en el `<head>` de las 8 páginas.
+    - Botón tuerca arriba a la derecha: en la landing dentro de la barra
+      (`<span data-ajustes-slot>` antes del burger), en los paneles al lado
+      de "Cerrar sesión" (`.topbar-right`), en el login fijo arriba a la
+      derecha. Abre un panel con **Tema** (claro/oscuro), **Zoom**
+      (80–150 %, `html.style.zoom`) e **Idioma** (español/inglés).
+    - Se guarda en localStorage: `innova_theme`, `innova_zoom`,
+      `innova_lang`. Si no hay tema guardado se usa `data-default-theme`
+      del `<html>`: landing = dark, login/paneles = light.
+    - Se sacó el botón de tema del dock de admin/superadmin (y su
+      `initTheme`): el tema ahora vive solo en la tuerca.
+    - La landing ahora tiene modo claro y el login modo oscuro (overrides
+      `html[data-theme=...]` al final de styles.css / login.css). La barra
+      de la landing sigue oscura en los dos modos (pedido del usuario).
+    - Traducción: `i18n.js` tiene `strings` (texto exacto ES → EN) y
+      `patterns` (textos armados con datos). `ajustes.js` recorre los
+      nodos de texto y un MutationObserver traduce lo que los paneles
+      pintan después. **Si se agrega un texto nuevo a la web, sumarlo a
+      i18n.js.** Nombres de productos, proveedores, oficios y las
+      descripciones de proveedores quedan en español (son datos).
+    - El "correo" que pidió el usuario terminó siendo la bandeja de admin24
+      (ver punto 15), no una opción de la tuerca.
+
+15. **Modo claro "Vivo" en todo el sitio + Correo de admin24 (2026-10-06)**
+    - Modo claro elegido por el usuario: opción C "Vivo" (se probaron A
+      "Perla" y B "Hielo"; no le gustaba el claro pálido). Fondo #F4F6FC con
+      manchas radiales violeta/azul (sin la foto cromo), textos #0F1A3D,
+      acentos con degradé #6C5CE7→#2B5BD7, tarjetas blancas con sombra.
+      Aplicado en styles.css (landing; footer blanco SIN línea arriba, el
+      usuario la pidió quitar; cta-band con degradé brillante y botón
+      blanco), login.css (las 3 pantallas) y admin.css (paneles). El satín
+      oscuro (cromo.png) queda solo en modo oscuro.
+    - **Se quitaron los mini-orbes** de todas las páginas (pedido del
+      usuario); orbe.png queda en imagenes/ sin usar.
+    - **Correo** (solo panel de admin24, sección en el dock con contador de
+      no leídos): tabla `correos` (tipo negocio/consulta/proveedor/pedido).
+      Llegan solos: negocio nuevo (registro.php), aviso de proveedor cuando un
+      negocio lo agrega (proveedores.php; texto aclara que es un aviso
+      automático, NO un mensaje de la empresa real), pedido a proveedor
+      (comprar.php) y consultas de los negocios (api/soporte.php, botón
+      "Soporte" en el topbar del panel del negocio). admin24 filtra, marca
+      leído/no leído, borra y responde consultas (api/correo.php).
+      Helper: funciones_correo.php.
+    - **Correo del negocio, tipo Gmail** (pedido del usuario: "que se abra
+      como otro frame como un Gmail lite"): vista `view-correo` en admin.html
+      (dock + botón "Correo" del topbar, ambos con contador). Carpetas
+      Recibidos / Enviados, botón Redactar (consulta a InnovaSistem), lista y
+      panel de lectura. Tabla `buzon_negocio` (tipo aviso/respuesta/pedido).
+      Llegan: avisos que manda admin24 ("Nuevo aviso": a todos, a los que
+      usan un proveedor, o a uno; atajo "Avisar a los negocios que lo usan"
+      en los correos de proveedor — ej. "MOLSAL tiene problemas para
+      enviar"), respuestas a consultas, "Pedido confirmado" (comprar.php) y
+      "Tu pedido llegó" (se genera al abrir la bandeja cuando
+      pedidos.fecha_llegada <= hoy; flag `pedidos.aviso_llegada`).
+      API: api/buzon.php (reemplazó a soporte.php, que se borró).
 
 ## Deploy
 

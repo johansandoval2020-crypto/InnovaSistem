@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-default-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,15 +8,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=20261006d">
+<link rel="stylesheet" href="admin.css?v=20261006j">
+<link rel="stylesheet" href="ajustes.css?v=20261006a">
+<script src="i18n.js?v=20261006c"></script>
+<script src="ajustes.js?v=20261006a"></script>
 </head>
 <body>
-
-<div class="orb-field" aria-hidden="true">
-  <span class="mini-orb o1"></span>
-  <span class="mini-orb o2"></span>
-  <span class="mini-orb o3"></span>
-</div>
 
 <nav class="dock" id="dock">
   <img class="dock-logo" src="imagenes/logo.png" alt="">
@@ -24,10 +21,10 @@
   <button class="dock-btn active" data-view="resumen"><span class="dbi"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="tip">Resumen</span></button>
   <button class="dock-btn" data-view="ingresos"><span class="dbi"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.3 9.8c0-1.2 1.2-2 2.7-2s2.7.9 2.7 2-1.2 1.6-2.7 2-2.7.9-2.7 2 1.2 2 2.7 2 2.7-.8 2.7-2"/></svg></span><span class="tip">Ingresos</span></button>
   <button class="dock-btn" data-view="clientes"><span class="dbi"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.4 4.5 2.5 4.5 5.8"/></svg></span><span class="tip">Clientes</span></button>
+  <button class="dock-btn" data-view="correo"><span class="dbi"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></span><span class="mail-badge" id="mailBadge" hidden>0</span><span class="tip">Correo</span></button>
   <button class="dock-btn" data-view="pedidos"><span class="dbi"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5-9 5-9-5Z"/><path d="M3 8v9l9 5 9-5V8"/><path d="M12 13v9"/></svg></span><span class="tip">Pedidos</span></button>
 
   <div class="dock-sep"></div>
-  <button class="dock-btn" id="themeToggle"><span class="dbi" id="themeIcon"><svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></span><span class="tip">Tema</span></button>
   <button class="dock-btn" id="logoutBtn"><span class="dbi"><svg viewBox="0 0 24 24"><path d="M9 4H5v16h4"/><path d="M14 8l4 4-4 4"/><path d="M18 12H9"/></svg></span><span class="tip">Salir</span></button>
 </nav>
 
@@ -39,6 +36,7 @@
       <p>Vista de administrador <span class="type-badge">InnovaSistem</span></p>
     </div>
     <div class="topbar-right">
+      <span data-ajustes-slot></span>
       <button class="btn-logout" id="logoutBtn2">Cerrar sesión</button>
     </div>
   </div>
@@ -74,6 +72,44 @@
   </section>
 
   <!-- PEDIDOS -->
+  <!-- CORREO -->
+  <section class="view" id="view-correo">
+    <div class="sec-head">
+      <div><h1>Correo</h1><p>Negocios nuevos, consultas de los negocios, avisos de proveedores y pedidos.</p></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="add-btn" id="noticeOpen"><span class="plus">+</span> Nuevo aviso</button>
+        <button class="btn-support" id="mailReadAll" type="button">Marcar todo como leído</button>
+      </div>
+    </div>
+    <div class="panel-box notice-box" id="noticeBox" hidden>
+      <h2>Nuevo aviso para los negocios</h2><p class="sub">Les llega a su Correo (por ejemplo: un proveedor con problemas para enviar).</p>
+      <form id="noticeForm" class="form-grid" style="margin-top:14px;">
+        <div class="f-field"><label>Para</label>
+          <select name="target" id="noticeTarget">
+            <option value="all">Todos los negocios</option>
+            <option value="provider">Negocios que usan un proveedor</option>
+            <option value="business">Un negocio</option>
+          </select></div>
+        <div class="f-field" id="noticeProviderField" hidden><label>Proveedor</label><select name="provider" id="noticeProvider"></select></div>
+        <div class="f-field" id="noticeBusinessField" hidden><label>Negocio</label><select name="business" id="noticeBusiness"></select></div>
+        <div class="f-field full"><label>Asunto</label><input name="subject" required maxlength="200"></div>
+        <div class="f-field full"><label>Mensaje</label><textarea name="text" rows="5" required maxlength="3000"></textarea></div>
+        <div class="full" style="display:flex;gap:16px;align-items:center;"><button class="save-btn" type="submit">Enviar aviso</button><button type="button" class="link-btn" id="noticeCancel">Cancelar</button></div>
+      </form>
+    </div>
+    <div class="chips" id="mailChips">
+      <button class="chip active" data-filter="todos">Todos</button>
+      <button class="chip" data-filter="sin-leer">Sin leer</button>
+      <button class="chip" data-filter="negocio">Negocios nuevos</button>
+      <button class="chip" data-filter="consulta">Consultas</button>
+      <button class="chip" data-filter="proveedor">Proveedores</button>
+      <button class="chip" data-filter="pedido">Pedidos</button>
+    </div>
+    <div class="panel-box mail-box">
+      <div class="mail-list" id="mailList"></div>
+    </div>
+  </section>
+
   <section class="view" id="view-pedidos">
     <div class="sec-head">
       <div><h1>Pedidos</h1><p>Compras a proveedores hechas por cada negocio y su seguimiento de entrega.</p></div>
@@ -89,6 +125,6 @@
 
 <script src="data.js?v=20261006a"></script>
 <script src="api.js?v=20261006a"></script>
-<script defer src="superadmin.js?v=20261006a"></script>
+<script defer src="superadmin.js?v=20261006e"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-default-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261005c">
+<link rel="stylesheet" href="styles.css?v=20261006g">
+<link rel="stylesheet" href="ajustes.css?v=20261006a">
+<script src="i18n.js?v=20261006c"></script>
+<script src="ajustes.js?v=20261006a"></script>
 </head>
 <body>
 
@@ -17,14 +20,6 @@
   <img src="imagenes/logo.png" alt="" class="mascot-logo">
 </div>
 <div class="grain"></div>
-<div class="orb-field" aria-hidden="true">
-  <span class="mini-orb o1"></span>
-  <span class="mini-orb o2"></span>
-  <span class="mini-orb o3"></span>
-  <span class="mini-orb o4"></span>
-  <span class="mini-orb o5"></span>
-</div>
-
 <nav class="nav" id="nav">
   <div class="nav-inner">
     <a href="#top" class="brand">
@@ -40,6 +35,7 @@
     <div class="nav-cta">
       <a href="login.html" class="btn btn-outline btn-sm">Iniciar sesión</a>
       <a href="login.html#crear" class="btn btn-dark btn-sm">Crear cuenta</a>
+      <span data-ajustes-slot></span>
       <button class="burger" id="burger" aria-label="Menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
   </div>

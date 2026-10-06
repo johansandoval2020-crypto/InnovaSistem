@@ -95,3 +95,43 @@ INSERT INTO pagos (id_negocio, id_cliente, id_venta, monto, metodo_pago, estado,
 SELECT v.id_negocio, v.id_cliente, v.id_venta, v.total, v.metodo_pago, v.estado, v.fecha
 FROM ventas v
 WHERE NOT EXISTS (SELECT 1 FROM pagos p WHERE p.id_venta = v.id_venta);
+
+-- Correo del administrador general (admin24): avisos de negocios nuevos,
+-- consultas de los negocios, avisos de proveedores y pedidos.
+--   tipo: 'negocio' | 'consulta' | 'proveedor' | 'pedido'
+--   respuesta: solo en consultas; el negocio la ve en su panel (Soporte).
+CREATE TABLE IF NOT EXISTS correos (
+    id_correo        INT PRIMARY KEY AUTO_INCREMENT,
+    tipo             VARCHAR(20) NOT NULL,
+    remitente        VARCHAR(150) NOT NULL,
+    asunto           VARCHAR(200) NOT NULL,
+    cuerpo           TEXT NOT NULL,
+    id_negocio       INT NULL,
+    proveedor        VARCHAR(100) NULL,
+    leido            TINYINT(1) NOT NULL DEFAULT 0,
+    fecha            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    respuesta        TEXT NULL,
+    fecha_respuesta  DATETIME NULL,
+    respuesta_vista  TINYINT(1) NOT NULL DEFAULT 0,
+    FOREIGN KEY (id_negocio) REFERENCES negocios(id_negocio)
+);
+
+-- Bandeja (tipo Gmail) de cada negocio: avisos de InnovaSistem, respuestas
+-- a sus consultas y avisos automáticos de sus pedidos.
+--   tipo: 'aviso' | 'respuesta' | 'pedido'
+CREATE TABLE IF NOT EXISTS buzon_negocio (
+    id_mensaje   INT PRIMARY KEY AUTO_INCREMENT,
+    id_negocio   INT NOT NULL,
+    tipo         VARCHAR(20) NOT NULL,
+    remitente    VARCHAR(150) NOT NULL,
+    asunto       VARCHAR(200) NOT NULL,
+    cuerpo       TEXT NOT NULL,
+    leido        TINYINT(1) NOT NULL DEFAULT 0,
+    fecha        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id_correo    INT NULL,
+    FOREIGN KEY (id_negocio) REFERENCES negocios(id_negocio)
+);
+
+-- Para avisar una sola vez que un pedido llegó.
+ALTER TABLE pedidos
+  ADD COLUMN IF NOT EXISTS aviso_llegada TINYINT(1) NOT NULL DEFAULT 0;

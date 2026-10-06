@@ -109,6 +109,8 @@ function eliminar_negocio(PDO $pdo, int $id): void {
                          OR id_proveedor IN ($proveedores)
                          OR id_pedido IN (SELECT id_pedido FROM detalle_pedido WHERE id_producto IN ($productos))");
 
+    $pdo->exec("DELETE FROM correos WHERE id_negocio = $id");
+    $pdo->exec("DELETE FROM buzon_negocio WHERE id_negocio = $id");
     $pdo->exec("DELETE FROM pagos WHERE id_venta IN ($ventas) OR id_cliente IN ($clientes) OR id_negocio = $id");
     $pdo->exec("DELETE FROM facturas WHERE id_venta IN ($ventas)");
     $pdo->exec("DELETE FROM detalle_venta WHERE id_venta IN ($ventas) OR id_producto IN ($productos)");

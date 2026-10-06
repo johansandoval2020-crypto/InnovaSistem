@@ -317,23 +317,6 @@ footer{background:rgba(34,26,61,.62);color:rgba(241,238,255,.7);padding:70px 0 2
 .mobile-menu a.btn{margin-top:8px;text-align:center;color:var(--beige);background:var(--moss);}
 .mobile-menu a.btn:hover{background:var(--moss-dark);}
 
-/* ---------------- mini orbs ---------------- */
-.orb-field{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
-.mini-orb{
-  position:absolute;border-radius:50%;
-  background:url('imagenes/orbe.png') center/cover;
-  box-shadow:0 20px 50px -14px rgba(34,26,61,.5);
-  animation:orb-float 12s ease-in-out infinite;
-}
-.mini-orb.o1{width:30px;height:30px;top:14%;left:6%;animation-duration:13s;}
-.mini-orb.o2{width:18px;height:18px;top:65%;left:88%;animation-duration:9s;animation-delay:1.2s;}
-.mini-orb.o3{width:24px;height:24px;top:82%;left:12%;animation-duration:15s;animation-delay:.6s;}
-.mini-orb.o4{width:14px;height:14px;top:24%;left:92%;animation-duration:10s;animation-delay:2s;}
-.mini-orb.o5{width:22px;height:22px;top:48%;left:3%;animation-duration:11s;animation-delay:.9s;}
-@keyframes orb-float{
-  0%,100%{transform:translateY(0) rotate(0deg);}
-  50%{transform:translateY(-22px) rotate(10deg);}
-}
 
 /* ---------------- responsive ---------------- */
 @media (max-width:980px){
@@ -360,3 +343,83 @@ footer{background:rgba(34,26,61,.62);color:rgba(241,238,255,.7);padding:70px 0 2
   .hero-inner{padding:24px 0;}
   .hero h1{font-size:clamp(2.1rem,11vw,3.2rem);}
 }
+
+/* ---------------- modo claro (tuerca → Tema → Claro) — opción C "Vivo" ----------------
+   Sin foto lavada: fondo claro limpio con manchas de color violeta/azul,
+   textos azul muy oscuro (alto contraste), acentos con degradé violeta→azul,
+   tarjetas blancas nítidas que se elevan al pasar el mouse y footer oscuro
+   como cierre. La barra de arriba sigue oscura. */
+html[data-theme="light"]{
+  --vivo-ink:#0F1A3D;
+  --vivo-text:#3B4566;
+  --vivo-grad:linear-gradient(135deg,#6C5CE7 0%,#2B5BD7 100%);
+}
+html[data-theme="light"] body{
+  background-color:#F4F6FC;
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(108,92,231,.22), transparent 38%),
+    radial-gradient(circle at 88% 18%, rgba(43,91,215,.2), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(108,92,231,.14), transparent 45%);
+  background-attachment:fixed;
+}
+html[data-theme="light"] .hero h1{color:var(--vivo-ink);}
+html[data-theme="light"] .hero h1 .accent{
+  background:var(--vivo-grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+html[data-theme="light"] .stat b{background:var(--vivo-grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
+html[data-theme="light"] .stat span{color:var(--vivo-text);font-weight:600;}
+html[data-theme="light"] .hero-cta .btn-dark{background:var(--vivo-grad);box-shadow:0 14px 30px -14px rgba(76,80,220,.7);}
+html[data-theme="light"] .hero-cta .btn-outline{color:var(--vivo-ink);border-color:rgba(15,26,61,.25);background:#fff;}
+html[data-theme="light"] .hero-cta .btn-outline:hover{background:var(--vivo-ink);color:#fff;border-color:var(--vivo-ink);}
+
+html[data-theme="light"] .section-head{background:#fff;border:1px solid rgba(15,26,61,.07);box-shadow:0 1px 2px rgba(15,26,61,.05), 0 24px 50px -30px rgba(43,40,140,.35);}
+html[data-theme="light"] .section-head h2{color:var(--vivo-ink);}
+html[data-theme="light"] .section-head p{color:var(--vivo-text);}
+html[data-theme="light"] .tag{background:var(--vivo-grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
+
+html[data-theme="light"] .step-card,
+html[data-theme="light"] .step-card:nth-child(even),
+html[data-theme="light"] .problem-card,
+html[data-theme="light"] .problem-card:nth-child(even),
+html[data-theme="light"] .offer-card,
+html[data-theme="light"] .offer-card:nth-child(even){
+  background:#fff;border:1px solid rgba(15,26,61,.07);
+  box-shadow:0 1px 2px rgba(15,26,61,.05), 0 16px 34px -24px rgba(43,40,140,.35);
+}
+html[data-theme="light"] .offer-card{border-left:3px solid #6C5CE7;}
+html[data-theme="light"] .step-card:hover,
+html[data-theme="light"] .problem-card:hover,
+html[data-theme="light"] .offer-card:hover{border-color:rgba(108,92,231,.45);box-shadow:0 2px 4px rgba(15,26,61,.06), 0 28px 50px -24px rgba(76,80,220,.45);}
+html[data-theme="light"] .step-num{background:var(--vivo-grad);box-shadow:0 8px 18px -8px rgba(76,80,220,.7);}
+html[data-theme="light"] .step-card h3,
+html[data-theme="light"] .problem-card h3,
+html[data-theme="light"] .offer-card h3{color:var(--vivo-ink);}
+html[data-theme="light"] .step-card p,
+html[data-theme="light"] .problem-card p,
+html[data-theme="light"] .offer-card p{color:var(--vivo-text);}
+html[data-theme="light"] .problem-card .ico{background:var(--vivo-grad);color:#fff;box-shadow:0 10px 20px -10px rgba(76,80,220,.7);}
+html[data-theme="light"] .offer-card .ico{color:#5B4BE0;}
+html[data-theme="light"] .offer-card .seal{background:#2B5BD7;}
+html[data-theme="light"] .problems-section,
+html[data-theme="light"] .sector-band{background:transparent;}
+
+html[data-theme="light"] footer{
+  background:#fff;color:var(--vivo-text);
+  box-shadow:0 -1px 0 rgba(15,26,61,.06), 0 -24px 50px -34px rgba(43,40,140,.35);
+}
+html[data-theme="light"] .foot-top{border-bottom-color:rgba(15,26,61,.08);}
+html[data-theme="light"] .foot-brand .brand,
+html[data-theme="light"] .foot-col h4{color:var(--vivo-ink);}
+html[data-theme="light"] .foot-brand p{color:var(--vivo-text);}
+html[data-theme="light"] .foot-col a{color:var(--vivo-text);}
+html[data-theme="light"] .foot-col a:hover{color:#5B4BE0;}
+/* cuadro "Sembrá el orden…" (cta-band) en la opción C: degradé brillante, sin negro, botón blanco */
+html[data-theme="light"] .cta-band{
+  background:linear-gradient(135deg,#6C5CE7 0%,#4F5BE0 50%,#2B5BD7 100%);
+  box-shadow:0 30px 60px -30px rgba(43,60,200,.6);
+}
+html[data-theme="light"] .cta-band h2{color:#fff;}
+html[data-theme="light"] .cta-band p{color:rgba(255,255,255,.88);}
+html[data-theme="light"] .cta-band .btn-rosy{background:#fff;color:#3B2FC0;box-shadow:0 14px 30px -14px rgba(10,8,60,.5);}
+html[data-theme="light"] .cta-band .btn-rosy:hover{background:#F1EEFF;}
+html[data-theme="light"] .cta-ring{border-color:rgba(255,255,255,.22);}

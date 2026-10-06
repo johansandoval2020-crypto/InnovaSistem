@@ -1,0 +1,56 @@
+/* ==========================================================================
+   InnovaSistem — botón de ajustes (tuerca) y su panel: tema, zoom e idioma.
+   Se usa en todas las páginas; tiene sus propios colores para verse igual
+   sobre la landing, el login y los paneles, en claro y en oscuro.
+   ========================================================================== */
+.aj-wrap{position:relative;display:inline-flex;flex:none;}
+.aj-wrap.aj-fixed{position:fixed;top:20px;right:22px;z-index:900;}
+
+.aj-gear{
+  width:40px;height:40px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(22,28,58,.82);color:#F1EEFF;border:1px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(14px);cursor:pointer;padding:0;
+  box-shadow:0 10px 24px -12px rgba(6,4,20,.6);
+  transition:transform .5s cubic-bezier(.16,1,.3,1), background .3s;
+}
+.aj-gear svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.aj-gear:hover{background:#6C5CE7;transform:rotate(45deg);}
+.aj-gear[aria-expanded="true"]{background:#6C5CE7;transform:rotate(90deg);}
+.aj-gear:focus-visible{outline:2px solid #C9C0FF;outline-offset:3px;}
+
+.aj-panel{
+  position:absolute;top:calc(100% + 10px);right:0;z-index:950;
+  width:min(300px, calc(100vw - 24px));
+  background:rgba(22,28,58,.95);color:#F1EEFF;
+  border:1px solid rgba(255,255,255,.14);border-radius:20px;
+  backdrop-filter:blur(20px) saturate(150%);
+  box-shadow:0 30px 60px -24px rgba(0,0,0,.6);
+  padding:18px;font-family:'Work Sans','Segoe UI',sans-serif;text-align:left;
+  opacity:0;transform:translateY(-6px);pointer-events:none;
+  transition:opacity .25s, transform .3s cubic-bezier(.16,1,.3,1);
+}
+.aj-panel.open{opacity:1;transform:translateY(0);pointer-events:auto;}
+.aj-title{font-family:'Fraunces','Georgia',serif;font-size:1.05rem;font-weight:600;margin-bottom:12px;}
+.aj-row{padding:12px 0;border-top:1px solid rgba(241,238,255,.1);}
+.aj-label{display:block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:rgba(241,238,255,.6);margin-bottom:8px;}
+
+.aj-seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:rgba(241,238,255,.08);border-radius:999px;padding:4px;}
+.aj-seg button{
+  border:none;background:none;color:rgba(241,238,255,.75);cursor:pointer;
+  padding:8px 6px;border-radius:999px;font:600 .8rem 'Work Sans','Segoe UI',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:6px;transition:background .25s,color .25s;
+}
+.aj-seg button svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.aj-seg button.on{background:#6C5CE7;color:#fff;}
+.aj-seg button:focus-visible, .aj-zoom button:focus-visible{outline:2px solid #C9C0FF;outline-offset:1px;}
+
+.aj-zoom{display:flex;align-items:center;gap:10px;}
+.aj-zoom button{
+  width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(241,238,255,.1);color:#F1EEFF;font-size:1.1rem;line-height:1;transition:background .25s;
+}
+.aj-zoom button:hover:not(:disabled){background:#6C5CE7;}
+.aj-zoom button:disabled{opacity:.35;cursor:not-allowed;}
+.aj-zoom output{flex:1;text-align:center;font-weight:700;font-size:.95rem;}
+.aj-zoom .aj-reset{width:auto;padding:0 12px;border-radius:999px;font-size:.72rem;font-weight:700;}

@@ -2,6 +2,7 @@
 /* Registro de un negocio nuevo: crea el negocio y su usuario dueño
    (rol Administrador). No inicia sesión — el usuario entra después. */
 require __DIR__ . '/conexion.php';
+require __DIR__ . '/funciones_correo.php';
 requerir_post();
 
 $d = entrada();
@@ -10,6 +11,7 @@ $nombreDueno   = texto($d, 'ownerName');
 $correo        = strtolower(texto($d, 'email'));
 $contrasena    = (string)($d['password'] ?? '');
 $tipo          = mb_substr(texto($d, 'type'), 0, 100);
+$tipoNombre    = texto($d, 'typeLabel') ?: $tipo;
 
 if ($nombreNegocio === '' || $nombreDueno === '' || $tipo === '') {
     responder(['error' => 'Completá todos los campos.'], 422);
@@ -35,6 +37,17 @@ $idNegocio = (int)$pdo->lastInsertId();
 
 $pdo->prepare('INSERT INTO usuarios (nombre, usuario_login, contrasena, id_rol, id_negocio) VALUES (?, ?, ?, ?, ?)')
     ->execute([$nombreDueno, $correo, password_hash($contrasena, PASSWORD_DEFAULT), ROL_ADMINISTRADOR, $idNegocio]);
+enviar_correo($pdo, 'negocio', 'InnovaSistem', 'Nuevo negocio registrado: ' . $nombreNegocio,
+    "Se registró un negocio nuevo en la plataforma.
+
+" .
+    "Negocio: $nombreNegocio
+Oficio: $tipoNombre
+Dueño: $nombreDueno
+Correo: $correo
+
+" .
+    "Ya puede iniciar sesión y empezar a cargar su inventario.", $idNegocio);
 $pdo->commit();
 
 responder(['ok' => true]);

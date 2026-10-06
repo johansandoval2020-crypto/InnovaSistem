@@ -30,22 +30,6 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;}
 }
 .back-home:hover{opacity:1;}
 
-/* mini orbs */
-.orb-field{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
-.mini-orb{
-  position:absolute;border-radius:50%;
-  background:url('imagenes/orbe.png') center/cover;
-  box-shadow:0 20px 50px -14px rgba(0,0,0,.55);
-  animation:orb-float 12s ease-in-out infinite;
-}
-.mini-orb.o1{width:28px;height:28px;top:10%;left:8%;animation-duration:13s;}
-.mini-orb.o2{width:16px;height:16px;top:78%;left:14%;animation-duration:9s;animation-delay:1s;}
-.mini-orb.o3{width:22px;height:22px;top:20%;left:90%;animation-duration:11s;animation-delay:.5s;}
-.mini-orb.o4{width:14px;height:14px;top:85%;left:88%;animation-duration:10s;animation-delay:1.6s;}
-@keyframes orb-float{
-  0%,100%{transform:translateY(0) rotate(0deg);}
-  50%{transform:translateY(-20px) rotate(10deg);}
-}
 
 .auth-card{
   position:relative;z-index:5;width:100%;max-width:960px;
@@ -91,6 +75,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;}
 }
 .field input:focus{outline:none;border-color:var(--midnight);box-shadow:0 0 0 3px rgba(74,63,145,.15);}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+/* los campos se achican para entrar en la fila (si no, "Correo" se salía y aparecía una barra gris abajo) */
+.field-row .field{min-width:0;}
+.field input{width:100%;min-width:0;box-sizing:border-box;}
+.auth-form-panel{overflow-x:hidden;}
 
 .type-combo{position:relative;}
 .type-combo input[type=text]{
@@ -151,3 +139,81 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;}
   .auth-art-panel{display:none;}
   .auth-form-panel{max-height:none;}
 }
+
+/* ---------------- modo oscuro (tuerca → Tema → Oscuro) ---------------- */
+html[data-theme="dark"] body{
+  background-image:linear-gradient(180deg, rgba(6,4,20,.55) 0%, rgba(6,4,20,.4) 45%, rgba(6,4,20,.65) 100%), url('imagenes/cromo.png');
+}
+html[data-theme="dark"] .auth-form-panel{background:rgba(22,28,58,.92);}
+html[data-theme="dark"] .auth-logo,
+html[data-theme="dark"] .auth-heading h1{color:var(--beige);}
+html[data-theme="dark"] .auth-heading p,
+html[data-theme="dark"] .switch-line{color:rgba(241,238,255,.7);}
+html[data-theme="dark"] .switch-line button{color:#C9C0FF;}
+html[data-theme="dark"] .tabs{background:rgba(241,238,255,.08);}
+html[data-theme="dark"] .tabs button{color:var(--beige);}
+html[data-theme="dark"] .tabs button.active{background:var(--moss);}
+html[data-theme="dark"] .field label{color:rgba(241,238,255,.65);}
+html[data-theme="dark"] .field input,
+html[data-theme="dark"] .type-combo input[type=text]{background:#170F35;color:var(--beige);border-color:rgba(241,238,255,.16);}
+html[data-theme="dark"] .type-combo input.picked{background:rgba(108,92,231,.18);}
+html[data-theme="dark"] .type-list{background:#1B1440;border-color:rgba(241,238,255,.14);}
+html[data-theme="dark"] .type-opt{color:var(--beige);}
+html[data-theme="dark"] .type-opt:hover, html[data-theme="dark"] .type-opt.active{background:rgba(108,92,231,.3);}
+html[data-theme="dark"] .type-group, html[data-theme="dark"] .type-opt.type-other{color:#C9C0FF;}
+html[data-theme="dark"] .type-empty{color:rgba(241,238,255,.6);}
+html[data-theme="dark"] .submit-btn{background:var(--moss);}
+html[data-theme="dark"] .admin-btn{color:#C9C0FF;border-color:#C9C0FF;background:rgba(201,192,255,.08);}
+html[data-theme="dark"] .form-msg.err{color:#FFB8DD;}
+html[data-theme="dark"] .form-msg.ok{color:#C9C0FF;}
+
+/* ---------------- modo claro "Vivo" (igual que la landing) ----------------
+   Fondo claro con manchas violeta/azul, tarjeta blanca nítida, textos azul
+   muy oscuro y acentos con degradé violeta → azul. Aplica a iniciar sesión,
+   crear cuenta y acceso de administrador. */
+html[data-theme="light"]{
+  --vivo-ink:#0F1A3D;
+  --vivo-text:#3B4566;
+  --vivo-grad:linear-gradient(135deg,#6C5CE7 0%,#2B5BD7 100%);
+}
+html[data-theme="light"] body{
+  background-color:#F4F6FC;
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(108,92,231,.22), transparent 38%),
+    radial-gradient(circle at 88% 18%, rgba(43,91,215,.2), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(108,92,231,.14), transparent 45%);
+}
+html[data-theme="light"] .back-home{color:var(--vivo-ink);font-weight:600;opacity:1;}
+html[data-theme="light"] .back-home:hover{color:#5B4BE0;}
+html[data-theme="light"] .auth-card{box-shadow:0 2px 4px rgba(15,26,61,.05), 0 40px 80px -40px rgba(43,40,140,.45);}
+html[data-theme="light"] .auth-form-panel{background:#fff;backdrop-filter:none;}
+html[data-theme="light"] .auth-logo,
+html[data-theme="light"] .auth-heading h1{color:var(--vivo-ink);}
+html[data-theme="light"] .auth-heading p{color:var(--vivo-text);}
+
+html[data-theme="light"] .tabs{background:#EEF0F8;}
+html[data-theme="light"] .tabs button{color:var(--vivo-text);opacity:1;}
+html[data-theme="light"] .tabs button.active{background:var(--vivo-grad);color:#fff;box-shadow:0 8px 18px -10px rgba(76,80,220,.7);}
+
+html[data-theme="light"] .field label{color:var(--vivo-text);}
+html[data-theme="light"] .field input,
+html[data-theme="light"] .type-combo input[type=text]{background:#F7F8FC;border-color:rgba(15,26,61,.12);color:var(--vivo-ink);}
+html[data-theme="light"] .field input::placeholder,
+html[data-theme="light"] .type-combo input[type=text]::placeholder{color:#8A92AD;}
+html[data-theme="light"] .field input:focus,
+html[data-theme="light"] .type-combo input[type=text]:focus{background:#fff;border-color:#6C5CE7;box-shadow:0 0 0 3px rgba(108,92,231,.18);}
+html[data-theme="light"] .type-combo input.picked{background:rgba(108,92,231,.08);border-color:#6C5CE7;}
+html[data-theme="light"] .type-list{background:#fff;border-color:rgba(15,26,61,.1);}
+html[data-theme="light"] .type-group{color:#5B4BE0;}
+html[data-theme="light"] .type-opt{color:var(--vivo-ink);}
+html[data-theme="light"] .type-opt:hover, html[data-theme="light"] .type-opt.active{background:rgba(108,92,231,.1);}
+html[data-theme="light"] .type-opt.type-other{color:#5B4BE0;}
+
+html[data-theme="light"] .submit-btn{background:var(--vivo-grad);color:#fff;box-shadow:0 14px 30px -14px rgba(76,80,220,.7);}
+html[data-theme="light"] .submit-btn:hover{box-shadow:0 18px 34px -14px rgba(76,80,220,.85);}
+html[data-theme="light"] .admin-btn{background:rgba(108,92,231,.06);border-color:#6C5CE7;color:#4F3DC0;}
+html[data-theme="light"] .admin-btn:hover{background:var(--vivo-grad);border-color:transparent;color:#fff;}
+html[data-theme="light"] .switch-line{color:var(--vivo-text);}
+html[data-theme="light"] .switch-line button{color:#5B4BE0;}
+html[data-theme="light"] .form-msg.err{background:rgba(232,95,168,.12);color:#B0306F;}
+html[data-theme="light"] .form-msg.ok{background:rgba(108,92,231,.12);color:#4F3DC0;}
